@@ -11,6 +11,7 @@ HWND btnStart;
 //HWND hWndMain;
 
 HINSTANCE hInst;
+ATOM atomGame;
 
 HDC hdcBack;
 HBITMAP hbmBack;
@@ -60,55 +61,6 @@ void Draw()
 	GdiTransparentBlt(hdcBack, 10, 10, ARROW_WIDTH, ARROW_HEIGHT, hArrowUp, 0, 0, ARROW_WIDTH, ARROW_HEIGHT, RGB(34, 177, 76));
 }
 
-void DrawGame()
-{
-	FillRect(hdcBack, &rcGame, (HBRUSH)(CreateSolidBrush(RGB(40, 187, 253))));
-	GdiTransparentBlt(hdcBack, 10, 10, ARROW_WIDTH, ARROW_HEIGHT, hArrowUp, 0, 0, ARROW_WIDTH, ARROW_HEIGHT, RGB(34, 177, 76));
-}
-
-void DrawMat()
-{
-
-}
-
-LRESULT CALLBACK WndGameProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-	PAINTSTRUCT psGame;
-	HDC hdcGame;
-
-	switch (uMsg)
-	{
-	case WM_CREATE:
-		hArrowUp = LoadBitmapDC(hWnd, L"arrow_up.bmp");
-		break;
-	case WM_ENABLE:
-		GetClientRect(hWnd, &rcGame);
-		InvalidateRect(hWnd, NULL, TRUE);
-		break;
-	case WM_DESTROY:
-		/*ShowWindow(hWndGame, SW_HIDE);
-		EnableWindow(hWndGame, FALSE);
-		EnableWindow(hWndMain, TRUE);*/
-		break;
-	case WM_SIZE:
-		GetClientRect(hWnd, &rcGame);
-		FinalizeBackBuffer();
-		InitializeBackBuffer(hWnd, rcGame.right - rcGame.left, rcGame.bottom - rcGame.top);
-		InvalidateRect(hWnd, NULL, TRUE);
-		break;
-	case WM_KEYDOWN:
-		InvalidateRect(hWnd, NULL, TRUE);
-		break;
-	case WM_PAINT:
-		DrawGame();
-		hdcGame = BeginPaint(hWnd, &psGame);
-		BitBlt(hdcGame, 0, 0, rcGame.right - rcGame.left, rcGame.bottom - rcGame.top, hdcBack, 0, 0, SRCCOPY);
-		EndPaint(hWnd, &psGame);
-		break;
-	}
-	return DefWindowProc(hWnd, uMsg, wParam, lParam);
-}
-
 LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	PAINTSTRUCT ps;
@@ -117,7 +69,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	switch (uMsg)
 	{
 	case WM_CREATE:
-		hArrowUp = LoadBitmapDC(hWnd, L"arrow_up.bmp");
+		//hArrowUp = LoadBitmapDC(hWnd, L"arrow_up.bmp");
 		break;
 	case WM_DESTROY:
 		FinalizeBackBuffer();
@@ -132,16 +84,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case WM_COMMAND:
 		if (lParam == (LPARAM)btnStart)
 		{
-			//ShowGameWindow(hWnd);
-			//CreateGameWindow(hWnd);
-			/*
-			EnableWindow(hWndGame, TRUE);
-			ShowWindow(hWndGame, SW_NORMAL);
-			SendMessage(hWndGame, WM_PAINT, 0, 0);
-			EnableWindow(hWnd, FALSE);*/
-			
-			//ShowWindow(hWnd, SW_HIDE);
-
+			//atomGame = GameWindow_RegisterClass(hInst);
+			hWndGame = CreateWindowEx(0, (LPCWSTR)atomGame, L"Game", WS_DISABLED | WS_OVERLAPPEDWINDOW, 100, 100, 1000, 700, 0, 0, hInst, NULL);
 			EnableWindow(hWndGame, TRUE);
 			ShowWindow(hWndGame, SW_NORMAL);
 		}
@@ -161,9 +105,8 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR lpCmdLine,
 	WNDCLASSEX wcex;
 	HWND hWnd;
 	MSG msg;
-	ATOM atomGame;
+	//ATOM atomGame;
 	
-
 	wcex.cbSize = sizeof(WNDCLASSEX);
 	wcex.style = 0;
 	wcex.lpfnWndProc = WndProc;
@@ -184,7 +127,7 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR lpCmdLine,
 	hWnd = CreateWindowEx(0, L"WindowClass", L"MyWindow", (WS_OVERLAPPEDWINDOW | WS_VISIBLE), 200, 100, 1000, 600, 0, 0, hInstance, NULL);
 	btnStart = CreateWindowEx(0, L"BUTTON", L"START", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 400, 215, 200, 70, hWnd, NULL, hInstance, NULL);
 
-	hWndGame = CreateWindowEx(0, (LPCWSTR)atomGame, L"Game", WS_DISABLED | WS_OVERLAPPEDWINDOW, 100, 100, 1000, 600, 0, 0, hInstance, NULL);
+	//hWndGame = CreateWindowEx(0, (LPCWSTR)atomGame, L"Game", WS_DISABLED | WS_OVERLAPPEDWINDOW, 100, 100, 1000, 700, 0, 0, hInstance, NULL);
 
 	ShowWindow(hWnd, nCmdShow);
 	UpdateWindow(hWnd);

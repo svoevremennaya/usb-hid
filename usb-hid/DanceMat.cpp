@@ -11,6 +11,27 @@
 
 #include "DanceMat.h"
 
+std::string pressedKeyStr = "q";
+int pressedKey = -1;
+int pressedPrev = -1;
+
+std::string strPrev = "w";
+
+BOOL isRunning;
+BYTE* inReport;
+int	inReportSize;
+
+OVERLAPPED devReadOverlapped;
+BOOL devReadPending;
+
+int devCount; // number of hid-devices
+int devSelected; // chosen device
+PSP_DEVICE_INTERFACE_DETAIL_DATA devDetailData[DEV_NUM]; // the path for a device interface
+int devDetailDataSize[DEV_NUM];
+int devInputReportSize[DEV_NUM];
+HANDLE hDevice;
+HANDLE hSelected;
+
 // HID Initialization
 void HID_Init()
 {
@@ -350,59 +371,74 @@ std::string IntToHex(const int i) {
 	return ost.str();
 }
 
-void Output(std::string &str)
+int Output(std::string &str)
 {
-	std::string str_square = " 0 1 7f 7f 7f 7f f 2 0";
-	std::string str_arrow_down = " 0 1 7f 7f 7f 7f 2f 0 0";
-	std::string str_triangle = " 0 1 7f 7f 7f 7f f 1 0";
-	std::string str_arrow_left = " 0 1 7f 7f 7f 7f 1f 0 0";
-	std::string str_cross = " 0 1 7f 7f 7f 7f f 4 0";
-	std::string str_arrow_up = " 0 1 7f 7f 7f 7f 4f 0 0";
-	std::string str_circle = " 0 1 7f 7f 7f 7f f 8 0";
-	std::string str_arrow_right = " 0 1 7f 7f 7f 7f 8f 0 0";
-	std::string str_select = " 0 1 7f 7f 7f 7f f 10 0";
-	std::string str_start = " 0 1 7f 7f 7f 7f 7 20 0";
-	//std::cout << str << std::endl;
-	if (str == str_square)
+	if (str == SQUARE_STR)
 	{
 		std::cout << "|_|" << std::endl;
+		pressedKeyStr = SQUARE_STR;
+		pressedKey = SQUARE;
 	}
-	else if (str == str_arrow_down)
+	else if (str == ARROW_DOWN_STR)
 	{
 		std::cout << "\\/" << std::endl;
+		pressedKeyStr = ARROW_DOWN_STR;
+		pressedKey = ARROW_DOWN;
 	}
-	else if (str == str_triangle)
+	else if (str == TRIANGLE_STR)
 	{
 		std::cout << "/_\\" << std::endl;
+		pressedKeyStr = TRIANGLE_STR;
+		pressedKey = TRIANGLE;
 	}
-	else if (str == str_arrow_left)
+	else if (str == ARROW_LEFT_STR)
 	{
 		std::cout << "<-" << std::endl;
+		pressedKeyStr = ARROW_LEFT_STR;
+		pressedKey = ARROW_LEFT;
 	}
-	else if (str == str_cross)
+	else if (str == CROSS_STR)
 	{
 		std::cout << "cross" << std::endl;
+		pressedKeyStr = CROSS_STR;
+		pressedKey = CROSS;
 	}
-	else if (str == str_arrow_up)
+	else if (str == ARROW_UP_STR)
 	{
 		std::cout << "/\\" << std::endl;
+		pressedKeyStr = ARROW_UP_STR;
+		pressedKey = ARROW_UP;
 	}
-	else if (str == str_circle)
+	else if (str == CIRCLE_STR)
 	{
 		std::cout << "circle" << std::endl;
+		pressedKeyStr = CIRCLE_STR;
+		pressedKey = CIRCLE;
 	}
-	else if (str == str_arrow_right)
+	else if (str == ARROW_RIGHT_STR)
 	{
 		std::cout << "->" << std::endl;
+		pressedKeyStr = ARROW_RIGHT_STR;
+		pressedKey = ARROW_RIGHT;
 	}
-	else if (str == str_select)
+	else if (str == SELECT_STR)
 	{
 		std::cout << "select" << std::endl;
+		pressedKeyStr = SELECT_STR;
+		pressedKey = SELECT;
 	}
-	else if (str == str_start)
+	else if (str == START_STR)
 	{
 		std::cout << "start" << std::endl;
+		pressedKeyStr = START_STR;
+		pressedKey = START;
 	}
+	else if (str == EMPTY_STR)
+	{
+		pressedKeyStr = EMPTY_STR;
+		pressedKey = EMPTY;
+	}
+	return pressedKey;
 }
 
 void OnInput()
@@ -414,10 +450,10 @@ void OnInput()
 	{
 		str = str + " " + IntToHex(inReport[i]);
 	}
-
+	//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! pressedPrev must be with strPrev
 	if (str != strPrev)
 	{
-		Output(str);
+		pressedPrev = Output(str);
 	}
 	strPrev = str;
 	//Output(str);
@@ -471,6 +507,21 @@ void GetDataByTimer()
 	else
 	{
 		std::cout << "\nThere are no connected devices" << std::endl;
+	}
+}
+
+void StartReceiveData()
+{
+	strPrev = "";
+	pressedKey = -1;
+	pressedKeyStr = "qwerty";
+	HID_Init();
+	FindDevice();
+	Connect();
+
+	while (1)
+	{
+		GetDataByTimer();
 	}
 }
 
