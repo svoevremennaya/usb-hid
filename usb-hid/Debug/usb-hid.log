@@ -1,6 +1,4 @@
 ﻿  EntryPoint.cpp
-D:\_BSUIR\.git\usb\usb-hid\usb-hid\EntryPoint.cpp(52,12): warning C4101: 'capabilities': unreferenced local variable
-D:\_BSUIR\.git\usb\usb-hid\usb-hid\EntryPoint.cpp(50,23): warning C4101: 'preparsedData': unreferenced local variable
-D:\_BSUIR\.git\usb\usb-hid\usb-hid\EntryPoint.cpp(155,8): warning C4101: 'numBuffers': unreferenced local variable
-D:\_BSUIR\.git\usb\usb-hid\usb-hid\EntryPoint.cpp(376,8): warning C4101: 'bytesRead': unreferenced local variable
+d:\_BSUIR\.git\usb\usb-hid\usb-hid\EntryPoint.cpp(115,6): warning C4101: 'hdc': unreferenced local variable
+d:\_BSUIR\.git\usb\usb-hid\usb-hid\EntryPoint.cpp(114,14): warning C4101: 'ps': unreferenced local variable
   usb-hid.vcxproj -> D:\_BSUIR\.git\usb\usb-hid\Debug\usb-hid.exe

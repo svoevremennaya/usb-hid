@@ -1,434 +1,198 @@
-#include <stdio.h>
-#include <iostream>
-#include <chrono>
+#include <Windows.h>
+#include "GameWindow.h"
 
-#include <iostream>
-#include <iomanip>
-#include <sstream>
+#define ARROW_WIDTH 96
+#define ARROW_HEIGHT 96
 
-#pragma comment (lib, "hid.lib")
-#pragma comment (lib, "setupapi.lib")
+HWND hWndGame;
 
-#include "EntryPoint.h"
+HWND btnStart;
+//HWND hWndGame;
+//HWND hWndMain;
 
-// HID Initialization
-void HID_Init()
+HINSTANCE hInst;
+
+HDC hdcBack;
+HBITMAP hbmBack;
+RECT clientRect;
+RECT rcGame;
+
+HDC hArrowUp;
+
+LRESULT CALLBACK WndGameProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+void InitializeBackBuffer(HWND hWnd, int width, int height)
 {
-	int  i;
+	HDC hdcWindow;
+	hdcWindow = GetDC(hWnd);
+	hdcBack = CreateCompatibleDC(hdcWindow);
+	hbmBack = CreateCompatibleBitmap(hdcWindow, width, height);
+	ReleaseDC(hWnd, hdcWindow);
 
-	devCount = 0;																// обнуляем количество найденных устройств
-	devSelected = -1;															// сбрасываем выбранное устройство
-	for (i = 0; i < DEV_NUM; i++)												// перебираем весь массив с указателями на структуры, хранящие пути к устройствам
+	SaveDC(hdcBack);
+	SelectObject(hdcBack, hbmBack);
+}
+
+void FinalizeBackBuffer()
+{
+	if (hdcBack)
 	{
-		devDetailData[i] = NULL;												// обнуляем очередной указатель на структуру, хранящую путь к устройству
+		RestoreDC(hdcBack, -1);
+		DeleteObject(hbmBack);
+		DeleteDC(hdcBack);
+		hdcBack = 0;
 	}
 }
 
-// HID UnInitialization
-void HID_UnInit()
+HDC LoadBitmapDC(HWND hWnd, const wchar_t* fileName)
 {
-	int  i;
-
-	for (i = 0; i < DEV_NUM; i++)												// перебираем весь массив с указателями на структуры, хранящие пути к устройствам
-	{
-		if (devDetailData[i])
-		{
-			free(devDetailData[i]);												// очищаем память структуры, хранящей путь к устройству
-		}
-	}
+	HANDLE hBitmap = LoadImage(0, (LPCWSTR)fileName, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+	HDC hdc = GetDC(hWnd);
+	HDC resultDC = CreateCompatibleDC(hdc);
+	SelectObject(resultDC, hBitmap);
+	ReleaseDC(0, hdc);
+	return resultDC;
 }
 
-// Find Devices
-int FindDevices()
+void Draw()
 {
-	GUID hidGuid;
-	HANDLE hDevice;
-	HDEVINFO devInfo;
-	SP_DEVICE_INTERFACE_DATA devData;
-	PSP_DEVICE_INTERFACE_DETAIL_DATA devDetail;
-	PSP_DEVICE_INTERFACE_DETAIL_DATA devDetailSelected;
-	PHIDP_PREPARSED_DATA preparsedData;
-	HIDD_ATTRIBUTES attributes;
-	HIDP_CAPS capabilities;
-	ULONG length;
-	int ind;
-	int size;
-	BOOL ok;
-
-	HidD_GetHidGuid(&hidGuid);
-	devInfo = SetupDiGetClassDevs(&hidGuid, NULL, NULL, DIGCF_PRESENT | DIGCF_DEVICEINTERFACE);
-	devData.cbSize = sizeof(devData);
-
-	devDetail = NULL;
-	if (devSelected != -1)
-	{
-		devDetailSelected = (PSP_DEVICE_INTERFACE_DETAIL_DATA)malloc(devDetailDataSize[devSelected]);
-		memcpy(devDetailSelected, devDetailData[devSelected], devDetailDataSize[devSelected]);
-	}
-	else
-	{
-		devDetailSelected = NULL;
-	}
-
-	// сбрасываем все указатели на детальные данные в списке
-	for (ind = 0; ind < DEV_NUM; ind++)
-	{
-		if (devDetailData[ind])
-		{
-			free(devDetailData[ind]);
-			devDetailData[ind] = NULL;
-		}
-	}
-
-	/* Scan all Devices */
-
-	ind = -1;
-	devCount = 0;
-	hDevice = INVALID_HANDLE_VALUE;
-
-	do
-	{
-		ind++;
-		if (hDevice != INVALID_HANDLE_VALUE)
-		{
-			CloseHandle(hDevice);
-		}
-
-		ok = SetupDiEnumDeviceInterfaces(devInfo, 0, &hidGuid, ind, &devData);
-		if (!ok)
-		{
-			break;
-		}
-
-		
-		ok = SetupDiGetDeviceInterfaceDetail(devInfo, &devData, NULL, 0, &length, NULL);
-		// allocation memory for buffer with detail data
-		if (devDetail)
-		{
-			free(devDetail);
-		}
-		devDetail = (PSP_DEVICE_INTERFACE_DETAIL_DATA)malloc(length);
-		size = length;
-		devDetail->cbSize = sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA);
-
-		// getting path to device
-		ok = SetupDiGetDeviceInterfaceDetail(devInfo, &devData, devDetail, length, NULL, NULL);
-		if (!ok)
-		{
-			continue;
-		}
-
-		// checking the availability of the device
-		hDevice = CreateFile(devDetail->DevicePath, 0, FILE_SHARE_READ | FILE_SHARE_WRITE, (LPSECURITY_ATTRIBUTES)NULL, OPEN_EXISTING, 0, NULL);
-		if (hDevice == INVALID_HANDLE_VALUE)
-		{
-			continue;
-		}
-
-		attributes.Size = sizeof(attributes);
-		ok = HidD_GetAttributes(hDevice, &attributes);
-		if (!ok) { continue; }
-
-		devCount++;
-		devDetail = NULL;
-		CloseHandle(hDevice);
-		hDevice = INVALID_HANDLE_VALUE;
-
-	} while (devCount < DEV_NUM);
-
-	if (devDetail)
-	{
-		free(devDetail);
-	}
-
-	if (devDetailSelected)
-	{
-		free(devDetailSelected);
-	}
-
-	SetupDiDestroyDeviceInfoList(devInfo);
-	return devCount;
+	FillRect(hdcBack, &clientRect, (HBRUSH)(CreateSolidBrush(RGB(40, 187, 253))));
+	GdiTransparentBlt(hdcBack, 10, 10, ARROW_WIDTH, ARROW_HEIGHT, hArrowUp, 0, 0, ARROW_WIDTH, ARROW_HEIGHT, RGB(34, 177, 76));
 }
 
-BOOL Hid_Open(int num)
+void DrawGame()
 {
-	ULONG numBuffers;
-
-	if (devDetailData[num] == NULL) { return FALSE; }
-
-	hDevice = CreateFile(devDetailData[num]->DevicePath, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, (LPSECURITY_ATTRIBUTES)NULL, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, NULL);
-	if (hDevice == INVALID_HANDLE_VALUE) { return FALSE; }
-	devSelected = num;
-
-	return TRUE;
+	FillRect(hdcBack, &rcGame, (HBRUSH)(CreateSolidBrush(RGB(40, 187, 253))));
+	GdiTransparentBlt(hdcBack, 10, 10, ARROW_WIDTH, ARROW_HEIGHT, hArrowUp, 0, 0, ARROW_WIDTH, ARROW_HEIGHT, RGB(34, 177, 76));
 }
 
-void Hid_Close()
+void DrawMat()
 {
-	devSelected = -1;
-	CancelIo(hDevice);
-	devReadPending = FALSE;
 
-	if (hDevice != INVALID_HANDLE_VALUE)
-	{
-		CloseHandle(hDevice);
-		hDevice = INVALID_HANDLE_VALUE;
-	}
 }
 
-BOOL Hid_Read(BYTE* buffer, DWORD size, DWORD* bytesRead)
+LRESULT CALLBACK WndGameProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	int lastError;
+	PAINTSTRUCT psGame;
+	HDC hdcGame;
 
-	if (!devReadPending)
+	switch (uMsg)
 	{
-		if (ReadFile(hDevice, buffer, size, bytesRead, &devReadOverlapped))
-		{
-			return(true);
-		}
-		devReadPending = true;
+	case WM_CREATE:
+		hArrowUp = LoadBitmapDC(hWnd, L"arrow_up.bmp");
+		break;
+	case WM_ENABLE:
+		GetClientRect(hWnd, &rcGame);
+		InvalidateRect(hWnd, NULL, TRUE);
+		break;
+	case WM_DESTROY:
+		/*ShowWindow(hWndGame, SW_HIDE);
+		EnableWindow(hWndGame, FALSE);
+		EnableWindow(hWndMain, TRUE);*/
+		break;
+	case WM_SIZE:
+		GetClientRect(hWnd, &rcGame);
+		FinalizeBackBuffer();
+		InitializeBackBuffer(hWnd, rcGame.right - rcGame.left, rcGame.bottom - rcGame.top);
+		InvalidateRect(hWnd, NULL, TRUE);
+		break;
+	case WM_KEYDOWN:
+		InvalidateRect(hWnd, NULL, TRUE);
+		break;
+	case WM_PAINT:
+		DrawGame();
+		hdcGame = BeginPaint(hWnd, &psGame);
+		BitBlt(hdcGame, 0, 0, rcGame.right - rcGame.left, rcGame.bottom - rcGame.top, hdcBack, 0, 0, SRCCOPY);
+		EndPaint(hWnd, &psGame);
+		break;
 	}
-	else
-	{
-		if (GetOverlappedResult(hDevice, &devReadOverlapped, bytesRead, false))
-		{
-			devReadPending = false;
-			return true;
-		}
-	}
-
-	lastError = GetLastError();
-	if (lastError != ERROR_IO_INCOMPLETE && lastError != ERROR_IO_PENDING)
-	{
-		devReadPending = false;
-		CancelIo(hDevice);
-		return false;
-	}
-	return true;
+	return DefWindowProc(hWnd, uMsg, wParam, lParam);
 }
 
-int FindDevice()
+LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	GUID hidGuid;
-	HANDLE hDevice;
-	HDEVINFO devInfo;
-	SP_DEVICE_INTERFACE_DATA devData;
-	PSP_DEVICE_INTERFACE_DETAIL_DATA devDetail;
-	PSP_DEVICE_INTERFACE_DETAIL_DATA devDetailSelected;
-	PHIDP_PREPARSED_DATA preparsedData;
-	HIDD_ATTRIBUTES attributes;
-	HIDP_CAPS capabilities;
-	ULONG length;
-	int ind;
-	int size;
-	BOOL ok;
+	PAINTSTRUCT ps;
+	HDC hdc;
 
-	HidD_GetHidGuid(&hidGuid);
-	devInfo = SetupDiGetClassDevs(&hidGuid, NULL, NULL, DIGCF_PRESENT | DIGCF_DEVICEINTERFACE);
-	devData.cbSize = sizeof(devData);
-
-	devDetail = NULL;
-	if (devSelected != -1)
+	switch (uMsg)
 	{
-		devDetailSelected = (PSP_DEVICE_INTERFACE_DETAIL_DATA)malloc(devDetailDataSize[devSelected]);
-		memcpy(devDetailSelected, devDetailData[devSelected], devDetailDataSize[devSelected]);
+	case WM_CREATE:
+		hArrowUp = LoadBitmapDC(hWnd, L"arrow_up.bmp");
+		break;
+	case WM_DESTROY:
+		FinalizeBackBuffer();
+		PostQuitMessage(0);
+		break;
+	case WM_SIZE:
+		GetClientRect(hWnd, &clientRect);
+		FinalizeBackBuffer();
+		InitializeBackBuffer(hWnd, clientRect.right - clientRect.left, clientRect.bottom - clientRect.top);
+		InvalidateRect(hWnd, NULL, TRUE);
+		break;
+	case WM_COMMAND:
+		if (lParam == (LPARAM)btnStart)
+		{
+			//ShowGameWindow(hWnd);
+			//CreateGameWindow(hWnd);
+			/*
+			EnableWindow(hWndGame, TRUE);
+			ShowWindow(hWndGame, SW_NORMAL);
+			SendMessage(hWndGame, WM_PAINT, 0, 0);
+			EnableWindow(hWnd, FALSE);*/
+			
+			//ShowWindow(hWnd, SW_HIDE);
+
+			EnableWindow(hWndGame, TRUE);
+			ShowWindow(hWndGame, SW_NORMAL);
+		}
+		break;
+	/*case WM_PAINT:
+		Draw();
+		hdc = BeginPaint(hWnd, &ps);
+		BitBlt(hdc, 0, 0, clientRect.right - clientRect.left, clientRect.bottom - clientRect.top, hdcBack, 0, 0, SRCCOPY);
+		EndPaint(hWnd, &ps);
+		break;*/
 	}
-	else
-	{
-		devDetailSelected = NULL;
-	}
-
-	// сбрасываем все указатели на детальные данные в списке
-	for (ind = 0; ind < DEV_NUM; ind++)
-	{
-		if (devDetailData[ind])
-		{
-			free(devDetailData[ind]);
-			devDetailData[ind] = NULL;
-		}
-	}
-
-	/* Scan all Devices */
-
-	ind = -1;
-	devCount = 0;
-	hDevice = INVALID_HANDLE_VALUE;
-
-	do
-	{
-		ind++;
-		if (hDevice != INVALID_HANDLE_VALUE)
-		{
-			CloseHandle(hDevice);
-		}
-
-		ok = SetupDiEnumDeviceInterfaces(devInfo, 0, &hidGuid, ind, &devData);
-		if (!ok)
-		{
-			break;
-		}
-
-
-		ok = SetupDiGetDeviceInterfaceDetail(devInfo, &devData, NULL, 0, &length, NULL);
-		// allocation memory for buffer with detail data
-		if (devDetail)
-		{
-			free(devDetail);
-		}
-		devDetail = (PSP_DEVICE_INTERFACE_DETAIL_DATA)malloc(length);
-		size = length;
-		devDetail->cbSize = sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA);
-
-		// getting path to device
-		ok = SetupDiGetDeviceInterfaceDetail(devInfo, &devData, devDetail, length, NULL, NULL);
-		if (!ok)
-		{
-			continue;
-		}
-
-		// checking the availability of the device
-		hDevice = CreateFile(devDetail->DevicePath, 0, FILE_SHARE_READ | FILE_SHARE_WRITE, (LPSECURITY_ATTRIBUTES)NULL, OPEN_EXISTING, 0, NULL);
-		if (hDevice == INVALID_HANDLE_VALUE)
-		{
-			continue;
-		}
-
-		attributes.Size = sizeof(attributes);
-		ok = HidD_GetAttributes(hDevice, &attributes);
-		if (!ok) { continue; }
-
-		if (attributes.VendorID == VID && attributes.ProductID == PID)
-		{
-			hSelected = hDevice;
-			devSelected = devCount;
-			printf("found");
-		}
-
-		ok = HidD_GetPreparsedData(hDevice, &preparsedData);					// запрашиваем блок данных для обработки репортов
-		if (!ok)	continue;
-
-		ok = HidP_GetCaps(preparsedData, &capabilities);   						// получаем возможности из дескриптора репорта
-		if (!ok) continue;
-
-		devDetailData[devCount] = devDetail;
-		devDetailDataSize[devCount] = size;
-		devInputReportSize[devCount] = capabilities.InputReportByteLength;
-
-		devCount++;
-		devDetail = NULL;
-		CloseHandle(hDevice);
-		hDevice = INVALID_HANDLE_VALUE;
-
-	} while (devCount < DEV_NUM);
-
-	if (devDetail) { free(devDetail); }
-
-	if (devDetailSelected) { free(devDetailSelected); }
-
-	SetupDiDestroyDeviceInfoList(devInfo);
-	return devCount;
+	return DefWindowProc(hWnd, uMsg, wParam, lParam);
 }
 
-void Connect()
+INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR lpCmdLine, INT nCmdShow)
 {
-	if (Hid_Open(devSelected))
+	WNDCLASSEX wcex;
+	HWND hWnd;
+	MSG msg;
+	ATOM atomGame;
+	
+
+	wcex.cbSize = sizeof(WNDCLASSEX);
+	wcex.style = 0;
+	wcex.lpfnWndProc = WndProc;
+	wcex.cbClsExtra = 0;
+	wcex.cbWndExtra = 0;
+	wcex.hInstance = hInstance;
+	wcex.hIcon = 0;
+	wcex.hCursor = LoadCursor(0, IDC_ARROW);
+	wcex.hbrBackground = (HBRUSH)COLOR_WINDOW; //(HBRUSH)(CreateSolidBrush(RGB(40, 187, 253)));
+	wcex.lpszMenuName = 0;
+	wcex.lpszClassName = L"WindowClass";
+	wcex.hIconSm = 0;
+
+	RegisterClassEx(&wcex);
+
+	atomGame = GameWindow_RegisterClass(hInstance);
+
+	hWnd = CreateWindowEx(0, L"WindowClass", L"MyWindow", (WS_OVERLAPPEDWINDOW | WS_VISIBLE), 200, 100, 1000, 600, 0, 0, hInstance, NULL);
+	btnStart = CreateWindowEx(0, L"BUTTON", L"START", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 400, 215, 200, 70, hWnd, NULL, hInstance, NULL);
+
+	hWndGame = CreateWindowEx(0, (LPCWSTR)atomGame, L"Game", WS_DISABLED | WS_OVERLAPPEDWINDOW, 100, 100, 1000, 600, 0, 0, hInstance, NULL);
+
+	ShowWindow(hWnd, nCmdShow);
+	UpdateWindow(hWnd);
+
+	while (GetMessage(&msg, 0, 0, 0))
 	{
-		inReportSize = devInputReportSize[devSelected];
-		if (inReport) { free(inReport); }
-		inReport = (BYTE*)calloc(inReportSize, 1);
-		isRunning = true;
-	}
-	else
-	{
-		std::cout << "Cannot open device\n";
-	}
-}
-
-std::string IntToHex(const int i) {
-	std::ostringstream ost;
-	ost << std::hex << i;
-	return ost.str();
-}
-
-void OnInput()
-{
-	std::string str;
-
-	str = "";
-	for (int i = 0; i < inReportSize; i++)
-	{
-		str = str + " " + IntToHex(inReport[i]);
-	}
-
-	std::cout << str;
-}
-
-void OnError()
-{
-	isRunning = false;
-	Hid_Close();
-	std::cout << "Device closed\n";
-}
-
-// doesnt work
-void GetInputReport()
-{
-	DWORD bytesRead;
-	if (isRunning)
-	{
-		if (HidD_GetInputReport(hDevice, inReport, inReportSize))
-		{
-			OnInput();
-		}
-		else
-		{
-			OnError();
-		}
-	}
-	else
-	{
-		std::cout << "\nThere are no connected devices";
-	}
-}
-
-void GetDataByTimer()
-{
-	DWORD bytesRead;
-	if (isRunning)
-	{
-		if (Hid_Read(inReport, inReportSize, &bytesRead))
-		{
-			if (bytesRead)
-			{
-				OnInput();
-			}
-		}
-		else
-		{
-			OnError();
-		}
-	}
-	else
-	{
-		std::cout << "\nThere are no connected devices";
-	}
-}
-
-int main()
-{
-	HID_Init();
-	int num = FindDevices();
-	printf("%d", num);
-	FindDevice();
-	Connect();
-	//GetInputReport();
-	//GetDataByTimer();
-
-	std::chrono::steady_clock::time_point tend = std::chrono::steady_clock::now() + std::chrono::seconds(5);
-	while (std::chrono::steady_clock::now() < tend)
-	{
-		GetDataByTimer();
+		DispatchMessage(&msg);
 	}
 
-	return 1;
+	return msg.wParam;
 }

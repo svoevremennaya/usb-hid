@@ -15,11 +15,23 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="DanceMat.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="EntryPoint.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GameWindow.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="DanceMat.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GameWindow.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
     <ClInclude Include="EntryPoint.h">
       <Filter>Source Files</Filter>
     </ClInclude>
