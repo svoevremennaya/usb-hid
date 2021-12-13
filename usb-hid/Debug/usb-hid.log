@@ -1,6 +1,2 @@
-﻿  DanceMat.cpp
-d:\_BSUIR\.git\usb\usb-hid\usb-hid\DanceMat.cpp(72,12): warning C4101: 'capabilities': unreferenced local variable
-d:\_BSUIR\.git\usb\usb-hid\usb-hid\DanceMat.cpp(70,23): warning C4101: 'preparsedData': unreferenced local variable
-d:\_BSUIR\.git\usb\usb-hid\usb-hid\DanceMat.cpp(175,8): warning C4101: 'numBuffers': unreferenced local variable
-d:\_BSUIR\.git\usb\usb-hid\usb-hid\DanceMat.cpp(470,8): warning C4101: 'bytesRead': unreferenced local variable
+﻿  GameWindow.cpp
   usb-hid.vcxproj -> D:\_BSUIR\.git\usb\usb-hid\Debug\usb-hid.exe

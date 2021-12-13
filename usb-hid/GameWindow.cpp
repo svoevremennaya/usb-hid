@@ -4,6 +4,9 @@
 
 #define ARROW_WIDTH 96
 #define ARROW_HEIGHT 96
+#define NUMBERS_KEY_TO_PRESS 10
+
+BYTE keysToPress[NUMBERS_KEY_TO_PRESS] = { ARROW_LEFT, SQUARE, ARROW_DOWN, ARROW_UP, TRIANGLE, ARROW_LEFT, ARROW_RIGHT, CIRCLE, CROSS, ARROW_DOWN };
 
 HDC buf;
 HANDLE hThreadReceive, hThreadCheckState;
@@ -88,6 +91,46 @@ void LoadPictures(PGameWindow pSelf)
 	hCrossRed = GameWindow_LoadBitmapDC(pSelf->hWndSelf, L"red\\cross_red.bmp");
 }
 
+// можно сразу загружать битмапки в поля структур, а не в отдельные переменные
+void InitializeKeyStruct()
+{
+	arrowLeft.keyId = ARROW_LEFT;
+	arrowLeft.hGreen = hArrowLeftGreen;
+	arrowLeft.hRed = hArrowLeftRed;
+
+	arrowRight.keyId = ARROW_RIGHT;
+	arrowRight.hGreen = hArrowRightGreen;
+	arrowRight.hRed = hArrowRightRed;
+
+	arrowDown.keyId = ARROW_DOWN;
+	arrowDown.hGreen = hArrowDownGreen;
+	arrowDown.hRed = hArrowDownRed;
+
+	arrowUp.keyId = ARROW_UP;
+	arrowUp.hGreen = hArrowUpGreen;
+	arrowUp.hRed = hArrowUpRed;
+
+	circle.keyId = CIRCLE;
+	circle.hGreen = hCircleGreen;
+	circle.hRed = hCircleRed;
+
+	triangle.keyId = TRIANGLE;
+	triangle.hGreen = hTriangleGreen;
+	triangle.hRed = hTriangleRed;
+
+	square.keyId = SQUARE;
+	square.hGreen = hSquareGreen;
+	square.hRed = hSquareRed;
+
+	cross.keyId = CROSS;
+	cross.hGreen = hCrossGreen;
+	cross.hRed = hCrossRed;
+
+	selectKey.keyId = SELECT;
+	startKey.keyId = START;
+	empty.keyId = EMPTY;
+}
+
 void GameWindow_Draw(PGameWindow pSelf)
 {
 	FillRect(pSelf->hdcBack, &pSelf->rcClient, (HBRUSH)(CreateSolidBrush(RGB(40, 187, 253))));
@@ -107,7 +150,7 @@ void CheckState(PGameWindow pSelf)
 	{
 		if (strPrev != pressedKeyStr)
 		{
-			switch (pressedKey)
+			switch (pressedKey.keyId)
 			{
 			case ARROW_UP:
 				buf = pSelf->hArrowUp;
@@ -171,6 +214,148 @@ void CheckState(PGameWindow pSelf)
 	}
 }
 
+void CheckState2(PGameWindow pSelf)
+{
+		
+}
+
+// Compare the expexted and pressed key
+void CompareResults(PGameWindow pSelf)
+{
+	for (int i = 0; i < NUMBERS_KEY_TO_PRESS; i++)
+	{
+		do
+		{
+			if (pressedKey.keyId == keysToPress[i])
+			{
+				switch (pressedKey.keyId)
+				{
+				case ARROW_UP:
+					buf = pSelf->hArrowUp;
+					pSelf->hArrowUp = pressedKey.hGreen;
+					InvalidateRect(pSelf->hWndSelf, NULL, TRUE);
+					Sleep(100);
+					pSelf->hArrowUp = buf;
+					break;
+				case ARROW_LEFT:
+					buf = pSelf->hArrowLeft;
+					pSelf->hArrowLeft = pressedKey.hGreen;
+					InvalidateRect(pSelf->hWndSelf, NULL, TRUE);
+					Sleep(100);
+					pSelf->hArrowLeft = buf;
+					break;
+				case ARROW_DOWN:
+					buf = pSelf->hArrowDown;
+					pSelf->hArrowDown = pressedKey.hGreen;
+					InvalidateRect(pSelf->hWndSelf, NULL, TRUE);
+					Sleep(100);
+					pSelf->hArrowDown = buf;
+					break;
+				case ARROW_RIGHT:
+					buf = pSelf->hArrowRight;
+					pSelf->hArrowRight = pressedKey.hGreen;
+					InvalidateRect(pSelf->hWndSelf, NULL, TRUE);
+					Sleep(100);
+					pSelf->hArrowRight = buf;
+					break;
+				case SQUARE:
+					buf = pSelf->hSquare;
+					pSelf->hSquare = pressedKey.hGreen;
+					InvalidateRect(pSelf->hWndSelf, NULL, TRUE);
+					Sleep(100);
+					pSelf->hSquare = buf;
+					break;
+				case TRIANGLE:
+					buf = pSelf->hTriangle;
+					pSelf->hTriangle = pressedKey.hGreen;
+					InvalidateRect(pSelf->hWndSelf, NULL, TRUE);
+					Sleep(100);
+					pSelf->hTriangle = buf;
+					break;
+				case CIRCLE:
+					buf = pSelf->hCircle;
+					pSelf->hCircle = pressedKey.hGreen;
+					InvalidateRect(pSelf->hWndSelf, NULL, TRUE);
+					Sleep(100);
+					pSelf->hCircle = buf;
+					break;
+				case CROSS:
+					buf = pSelf->hCross;
+					pSelf->hCross = pressedKey.hGreen;
+					InvalidateRect(pSelf->hWndSelf, NULL, TRUE);
+					Sleep(100);
+					pSelf->hCross = buf;
+					break;
+				}
+			}
+			else
+			{
+				switch (pressedKey.keyId)
+				{
+				case ARROW_UP:
+					buf = pSelf->hArrowUp;
+					pSelf->hArrowUp = pressedKey.hRed;
+					InvalidateRect(pSelf->hWndSelf, NULL, TRUE);
+					Sleep(100);
+					pSelf->hArrowUp = buf;
+					break;
+				case ARROW_LEFT:
+					buf = pSelf->hArrowLeft;
+					pSelf->hArrowLeft = pressedKey.hRed;
+					InvalidateRect(pSelf->hWndSelf, NULL, TRUE);
+					Sleep(100);
+					pSelf->hArrowLeft = buf;
+					break;
+				case ARROW_DOWN:
+					buf = pSelf->hArrowDown;
+					pSelf->hArrowDown = pressedKey.hRed;
+					InvalidateRect(pSelf->hWndSelf, NULL, TRUE);
+					Sleep(100);
+					pSelf->hArrowDown = buf;
+					break;
+				case ARROW_RIGHT:
+					buf = pSelf->hArrowRight;
+					pSelf->hArrowRight = pressedKey.hRed;
+					InvalidateRect(pSelf->hWndSelf, NULL, TRUE);
+					Sleep(100);
+					pSelf->hArrowRight = buf;
+					break;
+				case SQUARE:
+					buf = pSelf->hSquare;
+					pSelf->hSquare = pressedKey.hRed;
+					InvalidateRect(pSelf->hWndSelf, NULL, TRUE);
+					Sleep(100);
+					pSelf->hSquare = buf;
+					break;
+				case TRIANGLE:
+					buf = pSelf->hTriangle;
+					pSelf->hTriangle = pressedKey.hRed;
+					InvalidateRect(pSelf->hWndSelf, NULL, TRUE);
+					Sleep(100);
+					pSelf->hTriangle = buf;
+					break;
+				case CIRCLE:
+					buf = pSelf->hCircle;
+					pSelf->hCircle = pressedKey.hRed;
+					InvalidateRect(pSelf->hWndSelf, NULL, TRUE);
+					Sleep(100);
+					pSelf->hCircle = buf;
+					break;
+				case CROSS:
+					buf = pSelf->hCross;
+					pSelf->hCross = pressedKey.hRed;
+					InvalidateRect(pSelf->hWndSelf, NULL, TRUE);
+					Sleep(100);
+					pSelf->hCross = buf;
+					break;
+				}
+			}
+			InvalidateRect(pSelf->hWndSelf, NULL, TRUE);
+			//Sleep(200);
+		} while (pressedKey.keyId != keysToPress[i]);
+	}
+}
+
 LRESULT CALLBACK GameWindow_WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	PGameWindow pSelf;
@@ -195,8 +380,9 @@ LRESULT CALLBACK GameWindow_WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM 
 	{
 	case WM_CREATE:
 		LoadPictures(pSelf);
+		InitializeKeyStruct();
 		hThreadReceive = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)StartReceiveData, NULL, 0, 0);
-		hThreadCheckState = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)CheckState, pSelf, 0, 0);
+		hThreadCheckState = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)CompareResults, pSelf, 0, 0);
 		break;
 	case WM_DESTROY:
 		GameWindow_FinalizeBackBuffer(pSelf);

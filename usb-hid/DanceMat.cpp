@@ -11,8 +11,11 @@
 
 #include "DanceMat.h"
 
+Key arrowLeft, arrowRight, arrowDown, arrowUp, circle, triangle, square, cross, selectKey, startKey, empty;
+
 std::string pressedKeyStr = "q";
-int pressedKey = -1;
+//int pressedKey = -1;
+Key pressedKey;
 int pressedPrev = -1;
 
 std::string strPrev = "w";
@@ -377,68 +380,68 @@ int Output(std::string &str)
 	{
 		std::cout << "|_|" << std::endl;
 		pressedKeyStr = SQUARE_STR;
-		pressedKey = SQUARE;
+		pressedKey = square;
 	}
 	else if (str == ARROW_DOWN_STR)
 	{
 		std::cout << "\\/" << std::endl;
 		pressedKeyStr = ARROW_DOWN_STR;
-		pressedKey = ARROW_DOWN;
+		pressedKey = arrowDown;
 	}
 	else if (str == TRIANGLE_STR)
 	{
 		std::cout << "/_\\" << std::endl;
 		pressedKeyStr = TRIANGLE_STR;
-		pressedKey = TRIANGLE;
+		pressedKey = triangle;
 	}
 	else if (str == ARROW_LEFT_STR)
 	{
 		std::cout << "<-" << std::endl;
 		pressedKeyStr = ARROW_LEFT_STR;
-		pressedKey = ARROW_LEFT;
+		pressedKey = arrowLeft;
 	}
 	else if (str == CROSS_STR)
 	{
 		std::cout << "cross" << std::endl;
 		pressedKeyStr = CROSS_STR;
-		pressedKey = CROSS;
+		pressedKey = cross;
 	}
 	else if (str == ARROW_UP_STR)
 	{
 		std::cout << "/\\" << std::endl;
 		pressedKeyStr = ARROW_UP_STR;
-		pressedKey = ARROW_UP;
+		pressedKey = arrowUp;
 	}
 	else if (str == CIRCLE_STR)
 	{
 		std::cout << "circle" << std::endl;
 		pressedKeyStr = CIRCLE_STR;
-		pressedKey = CIRCLE;
+		pressedKey = circle;
 	}
 	else if (str == ARROW_RIGHT_STR)
 	{
 		std::cout << "->" << std::endl;
 		pressedKeyStr = ARROW_RIGHT_STR;
-		pressedKey = ARROW_RIGHT;
+		pressedKey = arrowRight;
 	}
 	else if (str == SELECT_STR)
 	{
 		std::cout << "select" << std::endl;
 		pressedKeyStr = SELECT_STR;
-		pressedKey = SELECT;
+		pressedKey = selectKey;
 	}
 	else if (str == START_STR)
 	{
 		std::cout << "start" << std::endl;
 		pressedKeyStr = START_STR;
-		pressedKey = START;
+		pressedKey = startKey;
 	}
 	else if (str == EMPTY_STR)
 	{
 		pressedKeyStr = EMPTY_STR;
-		pressedKey = EMPTY;
+		pressedKey = empty;
 	}
-	return pressedKey;
+	return pressedKey.keyId;
 }
 
 void OnInput()
@@ -513,7 +516,7 @@ void GetDataByTimer()
 void StartReceiveData()
 {
 	strPrev = "";
-	pressedKey = -1;
+	pressedKey.keyId = -1;
 	pressedKeyStr = "qwerty";
 	HID_Init();
 	FindDevice();

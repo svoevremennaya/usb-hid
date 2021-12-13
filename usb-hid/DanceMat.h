@@ -24,6 +24,15 @@ extern "C"
 #define START 9
 #define EMPTY 10
 
+typedef struct _key
+{
+	BYTE keyId;
+	HDC hGreen;
+	HDC hRed;
+} Key, *PKey;
+
+extern Key arrowLeft, arrowRight, arrowDown, arrowUp, circle, triangle, square, cross, selectKey, startKey, empty;
+
 const std::string ARROW_LEFT_STR = " 0 1 7f 7f 7f 7f 1f 0 0";
 const std::string ARROW_UP_STR = " 0 1 7f 7f 7f 7f 4f 0 0";
 const std::string ARROW_RIGHT_STR = " 0 1 7f 7f 7f 7f 8f 0 0";
@@ -37,7 +46,7 @@ const std::string START_STR = " 0 1 7f 7f 7f 7f f 20 0";
 const std::string EMPTY_STR = " 0 1 7f 7f 7f 7f f 0 0";
 
 extern std::string pressedKeyStr;
-extern int pressedKey;
+extern Key pressedKey;
 
 extern std::string strPrev;
 extern int pressedRrev;
