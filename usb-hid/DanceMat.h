@@ -23,6 +23,9 @@ extern "C"
 #define SELECT 8
 #define START 9
 #define EMPTY 10
+#define CENTRE 11
+
+extern BOOL pressedKeys[11];
 
 typedef struct _key
 {
@@ -31,7 +34,7 @@ typedef struct _key
 	HDC hRed;
 } Key, *PKey;
 
-extern Key arrowLeft, arrowRight, arrowDown, arrowUp, circle, triangle, square, cross, selectKey, startKey, empty;
+extern Key arrowLeft, arrowRight, arrowDown, arrowUp, circle, triangle, square, cross, selectKey, startKey, empty, centre;
 
 const std::string ARROW_LEFT_STR = " 0 1 7f 7f 7f 7f 1f 0 0";
 const std::string ARROW_UP_STR = " 0 1 7f 7f 7f 7f 4f 0 0";
@@ -44,12 +47,24 @@ const std::string CROSS_STR = " 0 1 7f 7f 7f 7f f 4 0";
 const std::string SELECT_STR = " 0 1 7f 7f 7f 7f f 10 0";
 const std::string START_STR = " 0 1 7f 7f 7f 7f f 20 0";
 const std::string EMPTY_STR = " 0 1 7f 7f 7f 7f f 0 0";
+const std::string CENTRE_STR = " 0 1 7f 7f 7f ff f 0 0";
+
+const std::string ARROW_LEFT_STR_CEN = " 0 1 7f 7f 7f ff 1f 0 0";
+const std::string ARROW_UP_STR_CEN = " 0 1 7f 7f 7f ff 4f 0 0";
+const std::string ARROW_RIGHT_STR_CEN = " 0 1 7f 7f 7f ff 8f 0 0";
+const std::string ARROW_DOWN_STR_CEN = " 0 1 7f 7f 7f ff 2f 0 0";
+const std::string SQUARE_STR_CEN = " 0 1 7f 7f 7f ff f 2 0";
+const std::string TRIANGLE_STR_CEN = " 0 1 7f 7f 7f ff f 1 0";
+const std::string CIRCLE_STR_CEN = " 0 1 7f 7f 7f ff f 8 0";
+const std::string CROSS_STR_CEN = " 0 1 7f 7f 7f ff f 4 0";
+const std::string SELECT_STR_CEN = " 0 1 7f 7f 7f ff f 10 0";
+const std::string START_STR_CEN = " 0 1 7f 7f 7f ff f 20 0";
 
 extern std::string pressedKeyStr;
 extern Key pressedKey;
 
 extern std::string strPrev;
-extern int pressedRrev;
+extern int pressedPrev;
 
 void HID_Init();
 void HID_UnInit();

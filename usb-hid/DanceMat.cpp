@@ -11,7 +11,10 @@
 
 #include "DanceMat.h"
 
-Key arrowLeft, arrowRight, arrowDown, arrowUp, circle, triangle, square, cross, selectKey, startKey, empty;
+Key arrowLeft, arrowRight, arrowDown, arrowUp, circle, triangle, square, cross, selectKey, startKey, empty, centre;
+
+//						AL        AD     AU     AR      T     SQ     CR    CIR     ST     SE    CEN
+BOOL pressedKeys[11] = { FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE };
 
 std::string pressedKeyStr = "q";
 //int pressedKey = -1;
@@ -376,61 +379,61 @@ std::string IntToHex(const int i) {
 
 int Output(std::string &str)
 {
-	if (str == SQUARE_STR)
+	if (str == SQUARE_STR || str == SQUARE_STR_CEN)
 	{
 		std::cout << "|_|" << std::endl;
 		pressedKeyStr = SQUARE_STR;
 		pressedKey = square;
 	}
-	else if (str == ARROW_DOWN_STR)
+	else if (str == ARROW_DOWN_STR || str == ARROW_DOWN_STR_CEN)
 	{
 		std::cout << "\\/" << std::endl;
 		pressedKeyStr = ARROW_DOWN_STR;
 		pressedKey = arrowDown;
 	}
-	else if (str == TRIANGLE_STR)
+	else if (str == TRIANGLE_STR || str == TRIANGLE_STR_CEN)
 	{
 		std::cout << "/_\\" << std::endl;
 		pressedKeyStr = TRIANGLE_STR;
 		pressedKey = triangle;
 	}
-	else if (str == ARROW_LEFT_STR)
+	else if (str == ARROW_LEFT_STR || str == ARROW_LEFT_STR_CEN)
 	{
 		std::cout << "<-" << std::endl;
 		pressedKeyStr = ARROW_LEFT_STR;
 		pressedKey = arrowLeft;
 	}
-	else if (str == CROSS_STR)
+	else if (str == CROSS_STR || str == CROSS_STR_CEN)
 	{
 		std::cout << "cross" << std::endl;
 		pressedKeyStr = CROSS_STR;
 		pressedKey = cross;
 	}
-	else if (str == ARROW_UP_STR)
+	else if (str == ARROW_UP_STR || str == ARROW_UP_STR_CEN)
 	{
 		std::cout << "/\\" << std::endl;
 		pressedKeyStr = ARROW_UP_STR;
 		pressedKey = arrowUp;
 	}
-	else if (str == CIRCLE_STR)
+	else if (str == CIRCLE_STR || str == CIRCLE_STR_CEN)
 	{
 		std::cout << "circle" << std::endl;
 		pressedKeyStr = CIRCLE_STR;
 		pressedKey = circle;
 	}
-	else if (str == ARROW_RIGHT_STR)
+	else if (str == ARROW_RIGHT_STR || str == ARROW_RIGHT_STR_CEN)
 	{
 		std::cout << "->" << std::endl;
 		pressedKeyStr = ARROW_RIGHT_STR;
 		pressedKey = arrowRight;
 	}
-	else if (str == SELECT_STR)
+	else if (str == SELECT_STR || str == SELECT_STR_CEN)
 	{
 		std::cout << "select" << std::endl;
 		pressedKeyStr = SELECT_STR;
 		pressedKey = selectKey;
 	}
-	else if (str == START_STR)
+	else if (str == START_STR || str == START_STR_CEN)
 	{
 		std::cout << "start" << std::endl;
 		pressedKeyStr = START_STR;
@@ -438,13 +441,20 @@ int Output(std::string &str)
 	}
 	else if (str == EMPTY_STR)
 	{
+		std::cout << "empty" << std::endl;
 		pressedKeyStr = EMPTY_STR;
 		pressedKey = empty;
+	}
+	else if (str == CENTRE_STR)
+	{
+		std::cout << "centre" << std::endl;
+		pressedKeyStr = CENTRE_STR;
+		pressedKey = centre;
 	}
 	return pressedKey.keyId;
 }
 
-void OnInput()
+std::string OnInput()
 {
 	std::string str;
 
@@ -452,14 +462,71 @@ void OnInput()
 	for (int i = 0; i < inReportSize; i++)
 	{
 		str = str + " " + IntToHex(inReport[i]);
+		BYTE byte = inReport[i];
+		if (i == 5)
+		{
+			if (byte == 0x0f)
+			{
+				pressedKeys[10] = TRUE;
+			}
+			else
+			{
+				pressedKeys[10] = FALSE;
+			}
+		}
+		if (i == 6)
+		{
+			if (byte == 0x0f) { pressedKeys[0] = FALSE; pressedKeys[1] = FALSE; pressedKeys[2] = FALSE; pressedKeys[3] = FALSE; }
+			if (byte == 0x1f) { pressedKeys[0] = TRUE; pressedKeys[1] = FALSE; pressedKeys[2] = FALSE; pressedKeys[3] = FALSE; }
+			if (byte == 0x2f) { pressedKeys[1] = TRUE; pressedKeys[0] = FALSE; pressedKeys[2] = FALSE; pressedKeys[3] = FALSE; }
+			if (byte == 0x3f) { pressedKeys[1] = TRUE; pressedKeys[0] = TRUE; pressedKeys[2] = FALSE; pressedKeys[3] = FALSE; }
+			if (byte == 0x4f) { pressedKeys[2] = TRUE; pressedKeys[0] = FALSE; pressedKeys[1] = FALSE;  pressedKeys[3] = FALSE; }
+			if (byte == 0x5f) { pressedKeys[0] = TRUE; pressedKeys[2] = TRUE; pressedKeys[1] = FALSE;  pressedKeys[3] = FALSE; }
+			if (byte == 0x6f) { pressedKeys[1] = TRUE; pressedKeys[2] = TRUE;  pressedKeys[0] = FALSE;  pressedKeys[3] = FALSE; }
+			if (byte == 0x7f) { pressedKeys[0] = TRUE; pressedKeys[1] = TRUE; pressedKeys[2] = TRUE; pressedKeys[3] = FALSE; }
+			if (byte == 0x8f) { pressedKeys[3] = TRUE; pressedKeys[0] = FALSE; pressedKeys[1] = FALSE; pressedKeys[2] = FALSE; }
+			if (byte == 0x9f) { pressedKeys[0] = TRUE; pressedKeys[3] = TRUE; pressedKeys[1] = FALSE; pressedKeys[2] = FALSE;  }
+			if (byte == 0xaf) { pressedKeys[1] = TRUE; pressedKeys[3] = TRUE; pressedKeys[0] = FALSE; pressedKeys[2] = FALSE;  }
+			if (byte == 0xbf) { pressedKeys[0] = TRUE; pressedKeys[1] = TRUE; pressedKeys[3] = TRUE; pressedKeys[2] = FALSE; }
+			if (byte == 0xcf) { pressedKeys[2] = TRUE; pressedKeys[3] = TRUE; pressedKeys[0] = FALSE; pressedKeys[1] = FALSE;  }
+			if (byte == 0xdf) { pressedKeys[0] = TRUE; pressedKeys[2] = TRUE; pressedKeys[3] = TRUE; pressedKeys[1] = FALSE; }
+			if (byte == 0xef) { pressedKeys[1] = TRUE; pressedKeys[2] = TRUE; pressedKeys[3] = TRUE; pressedKeys[0] = FALSE; }
+			if (byte == 0xff) { pressedKeys[0] = TRUE; pressedKeys[1] = TRUE; pressedKeys[2] = TRUE; pressedKeys[3] = TRUE; }
+		}
+		if (i == 7)
+		{
+			if (byte == 0x00) { pressedKeys[4] = FALSE; pressedKeys[5] = FALSE; pressedKeys[6] = FALSE; pressedKeys[7] = FALSE; }
+			if (byte == 0x01) { pressedKeys[4] = TRUE; pressedKeys[5] = FALSE; pressedKeys[6] = FALSE; pressedKeys[7] = FALSE; }
+			if (byte == 0x02) { pressedKeys[5] = TRUE; pressedKeys[4] = FALSE; pressedKeys[6] = FALSE; pressedKeys[7] = FALSE; }
+			if (byte == 0x03) { pressedKeys[5] = TRUE; pressedKeys[4] = TRUE; pressedKeys[6] = FALSE; pressedKeys[7] = FALSE; }
+			if (byte == 0x04) { pressedKeys[6] = TRUE; pressedKeys[4] = FALSE; pressedKeys[5] = FALSE; pressedKeys[7] = FALSE; }
+			if (byte == 0x05) { pressedKeys[4] = TRUE; pressedKeys[6] = TRUE; pressedKeys[5] = FALSE; pressedKeys[7] = FALSE; }
+			if (byte == 0x06) { pressedKeys[5] = TRUE; pressedKeys[6] = TRUE; pressedKeys[4] = FALSE; pressedKeys[7] = FALSE; }
+			if (byte == 0x07) { pressedKeys[4] = TRUE; pressedKeys[5] = TRUE; pressedKeys[6] = TRUE; pressedKeys[7] = FALSE; }
+			if (byte == 0x08) { pressedKeys[7] = TRUE; pressedKeys[4] = FALSE; pressedKeys[5] = FALSE; pressedKeys[6] = FALSE; }
+			if (byte == 0x09) { pressedKeys[4] = TRUE; pressedKeys[7] = TRUE; pressedKeys[5] = FALSE; pressedKeys[6] = FALSE; }
+			if (byte == 0x0a) { pressedKeys[5] = TRUE; pressedKeys[7] = TRUE; pressedKeys[4] = FALSE; pressedKeys[6] = FALSE; }
+			if (byte == 0x0b) { pressedKeys[4] = TRUE; pressedKeys[5] = TRUE; pressedKeys[7] = TRUE; pressedKeys[6] = FALSE; }
+			if (byte == 0x0c) { pressedKeys[6] = TRUE; pressedKeys[7] = TRUE; pressedKeys[4] = FALSE; pressedKeys[5] = FALSE; }
+			if (byte == 0x0d) { pressedKeys[4] = TRUE; pressedKeys[6] = TRUE; pressedKeys[7] = TRUE; pressedKeys[5] = FALSE; }
+			if (byte == 0x0e) { pressedKeys[5] = TRUE; pressedKeys[6] = TRUE; pressedKeys[7] = TRUE; pressedKeys[4] = FALSE; }
+			if (byte == 0x0f) { pressedKeys[4] = TRUE; pressedKeys[5] = TRUE; pressedKeys[6] = TRUE; pressedKeys[7] = TRUE; }
+
+			if ((byte & 0b00100000) == 0x20) { pressedKeys[8] = TRUE; }
+			if ((byte & 0b00010000) == 0x10) { pressedKeys[9] = TRUE; }
+			if ((byte & 0b00110000) == 0x30) { pressedKeys[8] = TRUE; pressedKeys[9] = TRUE; }
+		}
 	}
-	//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! pressedPrev must be with strPrev
+	
 	if (str != strPrev)
 	{
-		pressedPrev = Output(str);
+		pressedPrev = pressedKey.keyId;
+		strPrev = pressedKeyStr;
+		Output(str);
 	}
-	strPrev = str;
-	//Output(str);
+	pressedPrev = pressedKey.keyId;
+	strPrev = pressedKeyStr;
+	return str;
 }
 
 void OnError()
@@ -467,27 +534,6 @@ void OnError()
 	isRunning = false;
 	Hid_Close();
 	std::cout << "Device closed\n" << std::endl;
-}
-
-// doesnt work
-void GetInputReport()
-{
-	DWORD bytesRead;
-	if (isRunning)
-	{
-		if (HidD_GetInputReport(hDevice, inReport, inReportSize))
-		{
-			OnInput();
-		}
-		else
-		{
-			OnError();
-		}
-	}
-	else
-	{
-		std::cout << "\nThere are no connected devices" << std::endl;
-	}
 }
 
 void GetDataByTimer()

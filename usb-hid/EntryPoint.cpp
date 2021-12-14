@@ -18,7 +18,7 @@ HBITMAP hbmBack;
 RECT clientRect;
 RECT rcGame;
 
-HDC hArrowUp;
+//HDC hArrowUp;
 
 LRESULT CALLBACK WndGameProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
@@ -55,11 +55,11 @@ HDC LoadBitmapDC(HWND hWnd, const wchar_t* fileName)
 	return resultDC;
 }
 
-void Draw()
-{
-	FillRect(hdcBack, &clientRect, (HBRUSH)(CreateSolidBrush(RGB(40, 187, 253))));
-	GdiTransparentBlt(hdcBack, 10, 10, ARROW_WIDTH, ARROW_HEIGHT, hArrowUp, 0, 0, ARROW_WIDTH, ARROW_HEIGHT, RGB(34, 177, 76));
-}
+//void Draw()
+//{
+//	FillRect(hdcBack, &clientRect, (HBRUSH)(CreateSolidBrush(RGB(40, 187, 253))));
+//	GdiTransparentBlt(hdcBack, 10, 10, ARROW_WIDTH, ARROW_HEIGHT, hArrowUp, 0, 0, ARROW_WIDTH, ARROW_HEIGHT, RGB(34, 177, 76));
+//}
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
