@@ -85,7 +85,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		if (lParam == (LPARAM)btnStart)
 		{
 			//atomGame = GameWindow_RegisterClass(hInst);
-			hWndGame = CreateWindowEx(0, (LPCWSTR)atomGame, L"Game", WS_DISABLED | WS_OVERLAPPEDWINDOW, 100, 100, 1000, 700, 0, 0, hInst, NULL);
+			hWndGame = CreateWindowEx(0, (LPCWSTR)atomGame, L"Game", WS_DISABLED | WS_OVERLAPPEDWINDOW, 50, 50, 1100, 750, 0, 0, hInst, NULL);
 			EnableWindow(hWndGame, TRUE);
 			ShowWindow(hWndGame, SW_NORMAL);
 		}

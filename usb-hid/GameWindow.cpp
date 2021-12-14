@@ -4,7 +4,7 @@
 
 #define ARROW_WIDTH 96
 #define ARROW_HEIGHT 96
-#define NUMBERS_KEY_TO_PRESS 7
+#define NUMBERS_KEY_TO_PRESS 8
 
 BOOL keysToPress[NUMBERS_KEY_TO_PRESS][8] =
 {
@@ -15,7 +15,8 @@ BOOL keysToPress[NUMBERS_KEY_TO_PRESS][8] =
 	{ FALSE, FALSE, FALSE, FALSE, FALSE, TRUE, FALSE, FALSE},
 	{ TRUE, FALSE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE },
 	{ FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, TRUE },
-	{ FALSE, FALSE, FALSE, FALSE, TRUE, FALSE, FALSE, FALSE }
+	{ FALSE, FALSE, FALSE, FALSE, TRUE, FALSE, FALSE, FALSE },
+	{ FALSE, TRUE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE }
 };
 
 HDC buf;
@@ -23,6 +24,12 @@ HANDLE hThreadReceive, hThreadCheckState;
 
 int iteration = 0;
 
+int coordKeysToPress[2][8] = {
+	{356, 452, 452, 548, 356, 548, 356, 548},
+	{106, 202, 10, 106, 202, 202, 10, 10}
+};
+
+HDC hBack;
 HDC hArrowUp, hArrowLeft, hArrowDown, hArrowRight, hSquare, hTriangle, hCircle, hCross;
 HDC hArrowUpGreen, hArrowLeftGreen, hArrowDownGreen, hArrowRightGreen, hSquareGreen, hTriangleGreen, hCircleGreen, hCrossGreen;
 HDC hArrowUpRed, hArrowLeftRed, hArrowDownRed, hArrowRightRed, hSquareRed, hTriangleRed, hCircleRed, hCrossRed;
@@ -80,6 +87,8 @@ HDC GameWindow_LoadBitmapDC(HWND hWnd, const wchar_t* fileName)
 
 void LoadPictures(PGameWindow pSelf)
 {
+	hBack = GameWindow_LoadBitmapDC(pSelf->hWndSelf, L"red_back.bmp");
+
 	hArrowUp = GameWindow_LoadBitmapDC(pSelf->hWndSelf, L"arrow_up.bmp");
 	hArrowRight = GameWindow_LoadBitmapDC(pSelf->hWndSelf, L"arrow_right.bmp");
 	hArrowDown = GameWindow_LoadBitmapDC(pSelf->hWndSelf, L"arrow_down.bmp");
@@ -169,21 +178,22 @@ void InitializeKeyStruct(PGameWindow pSelf)
 
 void GameWindow_Draw(PGameWindow pSelf)
 {
-	FillRect(pSelf->hdcBack, &pSelf->rcClient, (HBRUSH)(CreateSolidBrush(RGB(40, 187, 253))));
-	GdiTransparentBlt(pSelf->hdcBack, 452, 296, ARROW_WIDTH, ARROW_HEIGHT, pSelf->hArrowUp, 0, 0, ARROW_WIDTH, ARROW_HEIGHT, RGB(34, 177, 76));
-	GdiTransparentBlt(pSelf->hdcBack, 548, 392, ARROW_WIDTH, ARROW_HEIGHT, pSelf->hArrowRight, 0, 0, ARROW_WIDTH, ARROW_HEIGHT, RGB(34, 177, 76));
-	GdiTransparentBlt(pSelf->hdcBack, 452, 488, ARROW_WIDTH, ARROW_HEIGHT, pSelf->hArrowDown, 0, 0, ARROW_WIDTH, ARROW_HEIGHT, RGB(34, 177, 76));
-	GdiTransparentBlt(pSelf->hdcBack, 356, 392, ARROW_WIDTH, ARROW_HEIGHT, pSelf->hArrowLeft, 0, 0, ARROW_WIDTH, ARROW_HEIGHT, RGB(34, 177, 76));
-	GdiTransparentBlt(pSelf->hdcBack, 548, 488, ARROW_WIDTH, ARROW_HEIGHT, pSelf->hSquare, 0, 0, ARROW_WIDTH, ARROW_HEIGHT, RGB(34, 177, 76));
-	GdiTransparentBlt(pSelf->hdcBack, 356, 488, ARROW_WIDTH, ARROW_HEIGHT, pSelf->hTriangle, 0, 0, ARROW_WIDTH, ARROW_HEIGHT, RGB(34, 177, 76));
-	GdiTransparentBlt(pSelf->hdcBack, 548, 296, ARROW_WIDTH, ARROW_HEIGHT, pSelf->hCircle, 0, 0, ARROW_WIDTH, ARROW_HEIGHT, RGB(34, 177, 76));
-	GdiTransparentBlt(pSelf->hdcBack, 356, 296, ARROW_WIDTH, ARROW_HEIGHT, pSelf->hCross, 0, 0, ARROW_WIDTH, ARROW_HEIGHT, RGB(34, 177, 76));
+	//FillRect(pSelf->hdcBack, &pSelf->rcClient, (HBRUSH)(CreateSolidBrush(RGB(40, 187, 253))));
+	StretchBlt(pSelf->hdcBack, 0, 0, pSelf->rcClient.right, pSelf->rcClient.bottom, hBack, 0, 0, 1280, 720, SRCCOPY);
+	GdiTransparentBlt(pSelf->hdcBack, 452, 316, ARROW_WIDTH, ARROW_HEIGHT, pSelf->hArrowUp, 0, 0, ARROW_WIDTH, ARROW_HEIGHT, RGB(34, 177, 76));
+	GdiTransparentBlt(pSelf->hdcBack, 548, 412, ARROW_WIDTH, ARROW_HEIGHT, pSelf->hArrowRight, 0, 0, ARROW_WIDTH, ARROW_HEIGHT, RGB(34, 177, 76));
+	GdiTransparentBlt(pSelf->hdcBack, 452, 508, ARROW_WIDTH, ARROW_HEIGHT, pSelf->hArrowDown, 0, 0, ARROW_WIDTH, ARROW_HEIGHT, RGB(34, 177, 76));
+	GdiTransparentBlt(pSelf->hdcBack, 356, 412, ARROW_WIDTH, ARROW_HEIGHT, pSelf->hArrowLeft, 0, 0, ARROW_WIDTH, ARROW_HEIGHT, RGB(34, 177, 76));
+	GdiTransparentBlt(pSelf->hdcBack, 548, 508, ARROW_WIDTH, ARROW_HEIGHT, pSelf->hSquare, 0, 0, ARROW_WIDTH, ARROW_HEIGHT, RGB(34, 177, 76));
+	GdiTransparentBlt(pSelf->hdcBack, 356, 508, ARROW_WIDTH, ARROW_HEIGHT, pSelf->hTriangle, 0, 0, ARROW_WIDTH, ARROW_HEIGHT, RGB(34, 177, 76));
+	GdiTransparentBlt(pSelf->hdcBack, 548, 316, ARROW_WIDTH, ARROW_HEIGHT, pSelf->hCircle, 0, 0, ARROW_WIDTH, ARROW_HEIGHT, RGB(34, 177, 76));
+	GdiTransparentBlt(pSelf->hdcBack, 356, 316, ARROW_WIDTH, ARROW_HEIGHT, pSelf->hCross, 0, 0, ARROW_WIDTH, ARROW_HEIGHT, RGB(34, 177, 76));
 
 	for (int i = 0; i < 8; i++)
 	{
 		if (keysToPress[iteration][i])
 		{
-			GdiTransparentBlt(pSelf->hdcBack, 100, 100, ARROW_WIDTH, ARROW_HEIGHT, pictures[i], 0, 0, ARROW_WIDTH, ARROW_HEIGHT, RGB(34, 177, 76));
+			GdiTransparentBlt(pSelf->hdcBack, coordKeysToPress[0][i], coordKeysToPress[1][i], ARROW_WIDTH, ARROW_HEIGHT, pictures[i], 0, 0, ARROW_WIDTH, ARROW_HEIGHT, RGB(34, 177, 76));
 		}
 	}
 }
@@ -527,6 +537,7 @@ LRESULT CALLBACK GameWindow_WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM 
 		GameWindow_FinalizeBackBuffer(pSelf);
 		CloseHandle(hThreadReceive);
 		CloseHandle(hThreadCheckState);
+		Hid_Close();
 		HeapFree(GetProcessHeap(), 0, pSelf);
 		break;
 	case WM_SIZE:
