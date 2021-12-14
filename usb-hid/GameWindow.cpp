@@ -21,13 +21,15 @@ BOOL keysToPress[NUMBERS_KEY_TO_PRESS][8] =
 HDC buf;
 HANDLE hThreadReceive, hThreadCheckState;
 
+int iteration = 0;
+
 HDC hArrowUp, hArrowLeft, hArrowDown, hArrowRight, hSquare, hTriangle, hCircle, hCross;
 HDC hArrowUpGreen, hArrowLeftGreen, hArrowDownGreen, hArrowRightGreen, hSquareGreen, hTriangleGreen, hCircleGreen, hCrossGreen;
 HDC hArrowUpRed, hArrowLeftRed, hArrowDownRed, hArrowRightRed, hSquareRed, hTriangleRed, hCircleRed, hCrossRed;
 HDC prev;
 HDC* changed;
 
-HDC pictures[8] = { hArrowUp, hArrowLeft, hArrowDown, hArrowRight, hSquare, hTriangle, hCircle, hCross };
+HDC pictures[8];
 
 typedef struct _GameWindow
 {
@@ -154,6 +156,15 @@ void InitializeKeyStruct(PGameWindow pSelf)
 	pSelf->hSquare = hSquare;
 	pSelf->hCross = hCross;
 	pSelf->hCircle = hCircle;
+
+	pictures[0] = hArrowLeft;
+	pictures[1] = hArrowDown;
+	pictures[2] = hArrowUp;
+	pictures[3] = hArrowRight;
+	pictures[4] = hTriangle;
+	pictures[5] = hSquare;
+	pictures[6] = hCross;
+	pictures[7] = hCircle;
 }
 
 void GameWindow_Draw(PGameWindow pSelf)
@@ -167,6 +178,14 @@ void GameWindow_Draw(PGameWindow pSelf)
 	GdiTransparentBlt(pSelf->hdcBack, 356, 488, ARROW_WIDTH, ARROW_HEIGHT, pSelf->hTriangle, 0, 0, ARROW_WIDTH, ARROW_HEIGHT, RGB(34, 177, 76));
 	GdiTransparentBlt(pSelf->hdcBack, 548, 296, ARROW_WIDTH, ARROW_HEIGHT, pSelf->hCircle, 0, 0, ARROW_WIDTH, ARROW_HEIGHT, RGB(34, 177, 76));
 	GdiTransparentBlt(pSelf->hdcBack, 356, 296, ARROW_WIDTH, ARROW_HEIGHT, pSelf->hCross, 0, 0, ARROW_WIDTH, ARROW_HEIGHT, RGB(34, 177, 76));
+
+	for (int i = 0; i < 8; i++)
+	{
+		if (keysToPress[iteration][i])
+		{
+			GdiTransparentBlt(pSelf->hdcBack, 100, 100, ARROW_WIDTH, ARROW_HEIGHT, pictures[i], 0, 0, ARROW_WIDTH, ARROW_HEIGHT, RGB(34, 177, 76));
+		}
+	}
 }
 
 void CheckState3(PGameWindow pSelf)
@@ -196,63 +215,51 @@ void CheckState3(PGameWindow pSelf)
 	}
 }
 
-void DrawKeysToPress(PGameWindow pSelf, int num)
-{
-	for (int i = 0; i < 8; i++)
-	{
-		if (keysToPress[num][i])
-		{
-			GdiTransparentBlt(pSelf->hdcBack, 100, 100, ARROW_WIDTH, ARROW_HEIGHT, pictures[i], 0, 0, ARROW_WIDTH, ARROW_HEIGHT, RGB(34, 177, 76));
-		}
-	}
-	InvalidateRect(pSelf->hWndSelf, NULL, TRUE);
-}
-
 void CompareResults(PGameWindow pSelf)
 {
 	BOOL done = FALSE;
-	for (int i = 0; i < NUMBERS_KEY_TO_PRESS; i++)
+	for (iteration = 0; iteration < NUMBERS_KEY_TO_PRESS; iteration++)
 	{
-		DrawKeysToPress(pSelf, i);
+		//DrawKeysToPress(pSelf, i);
 		done = FALSE;
 		do
 		{
-			if (pressedKeys[0] == TRUE && keysToPress[i][0] == TRUE) { pSelf->hArrowLeft = hArrowLeftGreen; done = TRUE; }
-			if (pressedKeys[1] == TRUE && keysToPress[i][1] == TRUE) { pSelf->hArrowDown = hArrowDownGreen; done = TRUE; }
-			if (pressedKeys[2] == TRUE && keysToPress[i][2] == TRUE) { pSelf->hArrowUp = hArrowUpGreen; done = TRUE; }
-			if (pressedKeys[3] == TRUE && keysToPress[i][3] == TRUE) { pSelf->hArrowRight = hArrowRightGreen; done = TRUE; }
-			if (pressedKeys[4] == TRUE && keysToPress[i][4] == TRUE) { pSelf->hTriangle = hTriangleGreen; done = TRUE; }
-			if (pressedKeys[5] == TRUE && keysToPress[i][5] == TRUE) { pSelf->hSquare = hSquareGreen; done = TRUE; }
-			if (pressedKeys[6] == TRUE && keysToPress[i][6] == TRUE) { pSelf->hCross = hCrossGreen; done = TRUE; }
-			if (pressedKeys[7] == TRUE && keysToPress[i][7] == TRUE) { pSelf->hCircle = hCircleGreen; done = TRUE; }
+			if (pressedKeys[0] == TRUE && keysToPress[iteration][0] == TRUE) { pSelf->hArrowLeft = hArrowLeftGreen; done = TRUE; }
+			if (pressedKeys[1] == TRUE && keysToPress[iteration][1] == TRUE) { pSelf->hArrowDown = hArrowDownGreen; done = TRUE; }
+			if (pressedKeys[2] == TRUE && keysToPress[iteration][2] == TRUE) { pSelf->hArrowUp = hArrowUpGreen; done = TRUE; }
+			if (pressedKeys[3] == TRUE && keysToPress[iteration][3] == TRUE) { pSelf->hArrowRight = hArrowRightGreen; done = TRUE; }
+			if (pressedKeys[4] == TRUE && keysToPress[iteration][4] == TRUE) { pSelf->hTriangle = hTriangleGreen; done = TRUE; }
+			if (pressedKeys[5] == TRUE && keysToPress[iteration][5] == TRUE) { pSelf->hSquare = hSquareGreen; done = TRUE; }
+			if (pressedKeys[6] == TRUE && keysToPress[iteration][6] == TRUE) { pSelf->hCross = hCrossGreen; done = TRUE; }
+			if (pressedKeys[7] == TRUE && keysToPress[iteration][7] == TRUE) { pSelf->hCircle = hCircleGreen; done = TRUE; }
 
-			if (pressedKeys[0] == FALSE && keysToPress[i][0] == FALSE) { pSelf->hArrowLeft = hArrowLeft; }
-			if (pressedKeys[1] == FALSE && keysToPress[i][1] == FALSE) { pSelf->hArrowDown = hArrowDown; }
-			if (pressedKeys[2] == FALSE && keysToPress[i][2] == FALSE) { pSelf->hArrowUp = hArrowUp; }
-			if (pressedKeys[3] == FALSE && keysToPress[i][3] == FALSE) { pSelf->hArrowRight = hArrowRight; }
-			if (pressedKeys[4] == FALSE && keysToPress[i][4] == FALSE) { pSelf->hTriangle = hTriangle; }
-			if (pressedKeys[4] == FALSE && keysToPress[i][4] == FALSE) { pSelf->hTriangle = hTriangle; }
-			if (pressedKeys[5] == FALSE && keysToPress[i][5] == FALSE) { pSelf->hSquare = hSquare; }
-			if (pressedKeys[6] == FALSE && keysToPress[i][6] == FALSE) { pSelf->hCross = hCross; }
-			if (pressedKeys[7] == FALSE && keysToPress[i][7] == FALSE) { pSelf->hCircle = hCircle; }
+			if (pressedKeys[0] == FALSE && keysToPress[iteration][0] == FALSE) { pSelf->hArrowLeft = hArrowLeft; }
+			if (pressedKeys[1] == FALSE && keysToPress[iteration][1] == FALSE) { pSelf->hArrowDown = hArrowDown; }
+			if (pressedKeys[2] == FALSE && keysToPress[iteration][2] == FALSE) { pSelf->hArrowUp = hArrowUp; }
+			if (pressedKeys[3] == FALSE && keysToPress[iteration][3] == FALSE) { pSelf->hArrowRight = hArrowRight; }
+			if (pressedKeys[4] == FALSE && keysToPress[iteration][4] == FALSE) { pSelf->hTriangle = hTriangle; }
+			if (pressedKeys[4] == FALSE && keysToPress[iteration][4] == FALSE) { pSelf->hTriangle = hTriangle; }
+			if (pressedKeys[5] == FALSE && keysToPress[iteration][5] == FALSE) { pSelf->hSquare = hSquare; }
+			if (pressedKeys[6] == FALSE && keysToPress[iteration][6] == FALSE) { pSelf->hCross = hCross; }
+			if (pressedKeys[7] == FALSE && keysToPress[iteration][7] == FALSE) { pSelf->hCircle = hCircle; }
 
-			if ((pressedKeys[0] == TRUE && keysToPress[i][0] == FALSE)) { pSelf->hArrowLeft = hArrowLeftRed; done = FALSE; }
-			if ((pressedKeys[1] == TRUE && keysToPress[i][1] == FALSE)) { pSelf->hArrowDown = hArrowDownRed; done = FALSE; }
-			if ((pressedKeys[2] == TRUE && keysToPress[i][2] == FALSE)) { pSelf->hArrowUp = hArrowUpRed; done = FALSE; }
-			if ((pressedKeys[3] == TRUE && keysToPress[i][3] == FALSE)) { pSelf->hArrowRight = hArrowRightRed; done = FALSE; }
-			if ((pressedKeys[4] == TRUE && keysToPress[i][4] == FALSE)) { pSelf->hTriangle = hTriangleRed; done = FALSE; }
-			if ((pressedKeys[5] == TRUE && keysToPress[i][5] == FALSE)) { pSelf->hSquare = hSquareRed; done = FALSE; }
-			if ((pressedKeys[6] == TRUE && keysToPress[i][6] == FALSE)) { pSelf->hCross = hCrossRed; done = FALSE; }
-			if ((pressedKeys[7] == TRUE && keysToPress[i][7] == FALSE)) { pSelf->hCircle = hCircleRed; done = FALSE; }
+			if ((pressedKeys[0] == TRUE && keysToPress[iteration][0] == FALSE)) { pSelf->hArrowLeft = hArrowLeftRed; done = FALSE; }
+			if ((pressedKeys[1] == TRUE && keysToPress[iteration][1] == FALSE)) { pSelf->hArrowDown = hArrowDownRed; done = FALSE; }
+			if ((pressedKeys[2] == TRUE && keysToPress[iteration][2] == FALSE)) { pSelf->hArrowUp = hArrowUpRed; done = FALSE; }
+			if ((pressedKeys[3] == TRUE && keysToPress[iteration][3] == FALSE)) { pSelf->hArrowRight = hArrowRightRed; done = FALSE; }
+			if ((pressedKeys[4] == TRUE && keysToPress[iteration][4] == FALSE)) { pSelf->hTriangle = hTriangleRed; done = FALSE; }
+			if ((pressedKeys[5] == TRUE && keysToPress[iteration][5] == FALSE)) { pSelf->hSquare = hSquareRed; done = FALSE; }
+			if ((pressedKeys[6] == TRUE && keysToPress[iteration][6] == FALSE)) { pSelf->hCross = hCrossRed; done = FALSE; }
+			if ((pressedKeys[7] == TRUE && keysToPress[iteration][7] == FALSE)) { pSelf->hCircle = hCircleRed; done = FALSE; }
 
-			if (pressedKeys[0] == FALSE && keysToPress[i][0] == TRUE) { done = FALSE; }
-			if (pressedKeys[1] == FALSE && keysToPress[i][1] == TRUE) { done - FALSE; }
-			if (pressedKeys[2] == FALSE && keysToPress[i][2] == TRUE) { done = FALSE; }
-			if (pressedKeys[3] == FALSE && keysToPress[i][3] == TRUE) { done = FALSE; }
-			if (pressedKeys[4] == FALSE && keysToPress[i][4] == TRUE) { done = FALSE; }
-			if (pressedKeys[5] == FALSE && keysToPress[i][5] == TRUE) { done = FALSE; }
-			if (pressedKeys[6] == FALSE && keysToPress[i][6] == TRUE) { done = FALSE; }
-			if (pressedKeys[7] == FALSE && keysToPress[i][7] == TRUE) { done = FALSE; }
+			if (pressedKeys[0] == FALSE && keysToPress[iteration][0] == TRUE) { done = FALSE; }
+			if (pressedKeys[1] == FALSE && keysToPress[iteration][1] == TRUE) { done - FALSE; }
+			if (pressedKeys[2] == FALSE && keysToPress[iteration][2] == TRUE) { done = FALSE; }
+			if (pressedKeys[3] == FALSE && keysToPress[iteration][3] == TRUE) { done = FALSE; }
+			if (pressedKeys[4] == FALSE && keysToPress[iteration][4] == TRUE) { done = FALSE; }
+			if (pressedKeys[5] == FALSE && keysToPress[iteration][5] == TRUE) { done = FALSE; }
+			if (pressedKeys[6] == FALSE && keysToPress[iteration][6] == TRUE) { done = FALSE; }
+			if (pressedKeys[7] == FALSE && keysToPress[iteration][7] == TRUE) { done = FALSE; }
 			//Sleep(100);
 			InvalidateRect(pSelf->hWndSelf, NULL, TRUE);
 			Sleep(100);
