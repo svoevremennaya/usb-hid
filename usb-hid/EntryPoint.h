@@ -1,4 +1,5 @@
 #include <Windows.h>
+#include "GameWindow.h"
 
 #define ARROW_WIDTH 96
 #define ARROW_HEIGHT 96
@@ -11,6 +12,6 @@ HINSTANCE hInst;
 ATOM atomGame;
 
 HDC hdcBack, hBackBmp;
-HBITMAP hbmBack, hbmButton;
+HBITMAP hbmBack;
 HDC hButton;
 RECT clientRect;

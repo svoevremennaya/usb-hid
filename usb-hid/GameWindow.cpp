@@ -1,36 +1,14 @@
-#include <Windows.h>
-#include <iostream>
-#include <time.h>
-#include "DanceMat.h"
+#include "GameWindow.h"
 
-#pragma comment (lib, "winmm.lib")
-
-#define ARROW_WIDTH 96
-#define ARROW_HEIGHT 96
-#define NUMBERS_KEY_TO_PRESS 8
-
-BOOL keysToPress[NUMBERS_KEY_TO_PRESS][8] =
-{
-	// AL    AD      AU     AR     T     SQ     CR     CIR
-	{ FALSE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE },
-	{ TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE },
-	{ FALSE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE },
-	{ FALSE, FALSE, FALSE, FALSE, FALSE, TRUE, FALSE, FALSE},
-	{ TRUE, FALSE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE },
-	{ FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, TRUE },
-	{ FALSE, FALSE, FALSE, FALSE, TRUE, FALSE, FALSE, FALSE },
-	{ FALSE, TRUE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE }
-};
-
+// Keys that should be pressed by user
 BOOL ranKeysToPress[8];
 
 HANDLE hThreadReceive, hThreadCheckState;
 
-int iteration = 0;
-
+// Coordinates of the up pictures
 int coordKeysToPress[2][8] = {
-	{356, 452, 452, 548, 356, 548, 356, 548},
-	{106, 202, 10, 106, 202, 202, 10, 10}
+	{ 446, 542, 542, 638, 446, 638, 446, 638 },
+	{ 106, 202, 10, 106, 202, 202, 10, 10 }
 };
 
 HDC hBack;
@@ -39,16 +17,6 @@ HDC hArrowUpGreen, hArrowLeftGreen, hArrowDownGreen, hArrowRightGreen, hSquareGr
 HDC hArrowUpRed, hArrowLeftRed, hArrowDownRed, hArrowRightRed, hSquareRed, hTriangleRed, hCircleRed, hCrossRed;
 
 HDC pictures[8];
-
-typedef struct _GameWindow
-{
-	HWND hWndSelf;
-	RECT rcClient;
-
-	HDC hdcBack;
-	HBITMAP hbmBack;
-	HDC hArrowUp, hArrowLeft, hArrowDown, hArrowRight, hSquare, hTriangle, hCircle, hCross;
-} GameWindow, *PGameWindow;
 
 void GameWnd_InitializeBackBuffer(PGameWindow pSelf)
 {
@@ -89,7 +57,7 @@ HDC GameWindow_LoadBitmapDC(HWND hWnd, const wchar_t* fileName)
 
 void LoadPictures(PGameWindow pSelf)
 {
-	hBack = GameWindow_LoadBitmapDC(pSelf->hWndSelf, L"red_back.bmp");
+	hBack = GameWindow_LoadBitmapDC(pSelf->hWndSelf, L"back_3.bmp");
 
 	pSelf->hArrowLeft = hArrowLeft = GameWindow_LoadBitmapDC(pSelf->hWndSelf, L"arrow_left.bmp");
 	pSelf->hArrowDown = hArrowDown = GameWindow_LoadBitmapDC(pSelf->hWndSelf, L"arrow_down.bmp");
@@ -134,16 +102,15 @@ void InitializeKeyStruct(PGameWindow pSelf)
 
 void GameWindow_Draw(PGameWindow pSelf)
 {
-	//FillRect(pSelf->hdcBack, &pSelf->rcClient, (HBRUSH)(CreateSolidBrush(RGB(40, 187, 253))));
-	StretchBlt(pSelf->hdcBack, 0, 0, pSelf->rcClient.right, pSelf->rcClient.bottom, hBack, 0, 0, 1280, 720, SRCCOPY);
-	GdiTransparentBlt(pSelf->hdcBack, 452, 316, ARROW_WIDTH, ARROW_HEIGHT, pSelf->hArrowUp, 0, 0, ARROW_WIDTH, ARROW_HEIGHT, RGB(34, 177, 76));
-	GdiTransparentBlt(pSelf->hdcBack, 548, 412, ARROW_WIDTH, ARROW_HEIGHT, pSelf->hArrowRight, 0, 0, ARROW_WIDTH, ARROW_HEIGHT, RGB(34, 177, 76));
-	GdiTransparentBlt(pSelf->hdcBack, 452, 508, ARROW_WIDTH, ARROW_HEIGHT, pSelf->hArrowDown, 0, 0, ARROW_WIDTH, ARROW_HEIGHT, RGB(34, 177, 76));
-	GdiTransparentBlt(pSelf->hdcBack, 356, 412, ARROW_WIDTH, ARROW_HEIGHT, pSelf->hArrowLeft, 0, 0, ARROW_WIDTH, ARROW_HEIGHT, RGB(34, 177, 76));
-	GdiTransparentBlt(pSelf->hdcBack, 548, 508, ARROW_WIDTH, ARROW_HEIGHT, pSelf->hSquare, 0, 0, ARROW_WIDTH, ARROW_HEIGHT, RGB(34, 177, 76));
-	GdiTransparentBlt(pSelf->hdcBack, 356, 508, ARROW_WIDTH, ARROW_HEIGHT, pSelf->hTriangle, 0, 0, ARROW_WIDTH, ARROW_HEIGHT, RGB(34, 177, 76));
-	GdiTransparentBlt(pSelf->hdcBack, 548, 316, ARROW_WIDTH, ARROW_HEIGHT, pSelf->hCircle, 0, 0, ARROW_WIDTH, ARROW_HEIGHT, RGB(34, 177, 76));
-	GdiTransparentBlt(pSelf->hdcBack, 356, 316, ARROW_WIDTH, ARROW_HEIGHT, pSelf->hCross, 0, 0, ARROW_WIDTH, ARROW_HEIGHT, RGB(34, 177, 76));
+	StretchBlt(pSelf->hdcBack, 0, 0, pSelf->rcClient.right, pSelf->rcClient.bottom, hBack, 0, 0, 1000, 667, SRCCOPY);
+	GdiTransparentBlt(pSelf->hdcBack, 542, 316, ARROW_WIDTH, ARROW_HEIGHT, pSelf->hArrowUp, 0, 0, ARROW_WIDTH, ARROW_HEIGHT, RGB(34, 177, 76));
+	GdiTransparentBlt(pSelf->hdcBack, 638, 412, ARROW_WIDTH, ARROW_HEIGHT, pSelf->hArrowRight, 0, 0, ARROW_WIDTH, ARROW_HEIGHT, RGB(34, 177, 76));
+	GdiTransparentBlt(pSelf->hdcBack, 542, 508, ARROW_WIDTH, ARROW_HEIGHT, pSelf->hArrowDown, 0, 0, ARROW_WIDTH, ARROW_HEIGHT, RGB(34, 177, 76));
+	GdiTransparentBlt(pSelf->hdcBack, 446, 412, ARROW_WIDTH, ARROW_HEIGHT, pSelf->hArrowLeft, 0, 0, ARROW_WIDTH, ARROW_HEIGHT, RGB(34, 177, 76));
+	GdiTransparentBlt(pSelf->hdcBack, 638, 508, ARROW_WIDTH, ARROW_HEIGHT, pSelf->hSquare, 0, 0, ARROW_WIDTH, ARROW_HEIGHT, RGB(34, 177, 76));
+	GdiTransparentBlt(pSelf->hdcBack, 446, 508, ARROW_WIDTH, ARROW_HEIGHT, pSelf->hTriangle, 0, 0, ARROW_WIDTH, ARROW_HEIGHT, RGB(34, 177, 76));
+	GdiTransparentBlt(pSelf->hdcBack, 638, 316, ARROW_WIDTH, ARROW_HEIGHT, pSelf->hCircle, 0, 0, ARROW_WIDTH, ARROW_HEIGHT, RGB(34, 177, 76));
+	GdiTransparentBlt(pSelf->hdcBack, 446, 316, ARROW_WIDTH, ARROW_HEIGHT, pSelf->hCross, 0, 0, ARROW_WIDTH, ARROW_HEIGHT, RGB(34, 177, 76));
 
 	for (int i = 0; i < 8; i++)
 	{
@@ -181,60 +148,7 @@ void GameWindow_CheckState(PGameWindow pSelf)
 	}
 }
 
-void GameWindow_CompareResults(PGameWindow pSelf)
-{
-	BOOL done = FALSE;
-	for (iteration = 0; iteration < NUMBERS_KEY_TO_PRESS; iteration++)
-	{
-		//DrawKeysToPress(pSelf, i);
-		done = FALSE;
-		do
-		{
-			if (pressedKeys[0] == TRUE && keysToPress[iteration][0] == TRUE) { pSelf->hArrowLeft = hArrowLeftGreen; done = TRUE; }
-			if (pressedKeys[1] == TRUE && keysToPress[iteration][1] == TRUE) { pSelf->hArrowDown = hArrowDownGreen; done = TRUE; }
-			if (pressedKeys[2] == TRUE && keysToPress[iteration][2] == TRUE) { pSelf->hArrowUp = hArrowUpGreen; done = TRUE; }
-			if (pressedKeys[3] == TRUE && keysToPress[iteration][3] == TRUE) { pSelf->hArrowRight = hArrowRightGreen; done = TRUE; }
-			if (pressedKeys[4] == TRUE && keysToPress[iteration][4] == TRUE) { pSelf->hTriangle = hTriangleGreen; done = TRUE; }
-			if (pressedKeys[5] == TRUE && keysToPress[iteration][5] == TRUE) { pSelf->hSquare = hSquareGreen; done = TRUE; }
-			if (pressedKeys[6] == TRUE && keysToPress[iteration][6] == TRUE) { pSelf->hCross = hCrossGreen; done = TRUE; }
-			if (pressedKeys[7] == TRUE && keysToPress[iteration][7] == TRUE) { pSelf->hCircle = hCircleGreen; done = TRUE; }
-
-			if (pressedKeys[0] == FALSE && keysToPress[iteration][0] == FALSE) { pSelf->hArrowLeft = hArrowLeft; }
-			if (pressedKeys[1] == FALSE && keysToPress[iteration][1] == FALSE) { pSelf->hArrowDown = hArrowDown; }
-			if (pressedKeys[2] == FALSE && keysToPress[iteration][2] == FALSE) { pSelf->hArrowUp = hArrowUp; }
-			if (pressedKeys[3] == FALSE && keysToPress[iteration][3] == FALSE) { pSelf->hArrowRight = hArrowRight; }
-			if (pressedKeys[4] == FALSE && keysToPress[iteration][4] == FALSE) { pSelf->hTriangle = hTriangle; }
-			if (pressedKeys[4] == FALSE && keysToPress[iteration][4] == FALSE) { pSelf->hTriangle = hTriangle; }
-			if (pressedKeys[5] == FALSE && keysToPress[iteration][5] == FALSE) { pSelf->hSquare = hSquare; }
-			if (pressedKeys[6] == FALSE && keysToPress[iteration][6] == FALSE) { pSelf->hCross = hCross; }
-			if (pressedKeys[7] == FALSE && keysToPress[iteration][7] == FALSE) { pSelf->hCircle = hCircle; }
-
-			if ((pressedKeys[0] == TRUE && keysToPress[iteration][0] == FALSE)) { pSelf->hArrowLeft = hArrowLeftRed; done = FALSE; }
-			if ((pressedKeys[1] == TRUE && keysToPress[iteration][1] == FALSE)) { pSelf->hArrowDown = hArrowDownRed; done = FALSE; }
-			if ((pressedKeys[2] == TRUE && keysToPress[iteration][2] == FALSE)) { pSelf->hArrowUp = hArrowUpRed; done = FALSE; }
-			if ((pressedKeys[3] == TRUE && keysToPress[iteration][3] == FALSE)) { pSelf->hArrowRight = hArrowRightRed; done = FALSE; }
-			if ((pressedKeys[4] == TRUE && keysToPress[iteration][4] == FALSE)) { pSelf->hTriangle = hTriangleRed; done = FALSE; }
-			if ((pressedKeys[5] == TRUE && keysToPress[iteration][5] == FALSE)) { pSelf->hSquare = hSquareRed; done = FALSE; }
-			if ((pressedKeys[6] == TRUE && keysToPress[iteration][6] == FALSE)) { pSelf->hCross = hCrossRed; done = FALSE; }
-			if ((pressedKeys[7] == TRUE && keysToPress[iteration][7] == FALSE)) { pSelf->hCircle = hCircleRed; done = FALSE; }
-
-			if (pressedKeys[0] == FALSE && keysToPress[iteration][0] == TRUE) { done = FALSE; }
-			if (pressedKeys[1] == FALSE && keysToPress[iteration][1] == TRUE) { done - FALSE; }
-			if (pressedKeys[2] == FALSE && keysToPress[iteration][2] == TRUE) { done = FALSE; }
-			if (pressedKeys[3] == FALSE && keysToPress[iteration][3] == TRUE) { done = FALSE; }
-			if (pressedKeys[4] == FALSE && keysToPress[iteration][4] == TRUE) { done = FALSE; }
-			if (pressedKeys[5] == FALSE && keysToPress[iteration][5] == TRUE) { done = FALSE; }
-			if (pressedKeys[6] == FALSE && keysToPress[iteration][6] == TRUE) { done = FALSE; }
-			if (pressedKeys[7] == FALSE && keysToPress[iteration][7] == TRUE) { done = FALSE; }
-			//Sleep(100);
-			InvalidateRect(pSelf->hWndSelf, NULL, TRUE);
-			Sleep(100);
-		} while (!done);
-		//Sleep(300);
-	}
-}
-
-void GenerateKeysToPress()
+void GameWindow_GenerateKeysToPress()
 {
 	int numKeysToPress, indKeyToPress;
 
@@ -254,12 +168,11 @@ void GenerateKeysToPress()
 	}
 }
 
-void ProcessData(PGameWindow pSelf)
+void GameWindow_ProcessData(PGameWindow pSelf)
 {
 	while (1)
 	{
-		GenerateKeysToPress();
-		//InvalidateRect(pSelf->hWndSelf, NULL, TRUE);
+		GameWindow_GenerateKeysToPress();
 		BOOL done = FALSE;
 		do
 		{
@@ -298,7 +211,6 @@ void ProcessData(PGameWindow pSelf)
 					done = FALSE;
 				}
 			}
-			//Sleep(100);
 			InvalidateRect(pSelf->hWndSelf, NULL, TRUE);
 			Sleep(200);
 		} while (!done);
@@ -331,11 +243,11 @@ LRESULT CALLBACK GameWindow_WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM 
 	switch (uMsg)
 	{
 	case WM_CREATE:
-		PlaySoundA("eiffel_blue.wav", NULL, SND_FILENAME | SND_ASYNC);
+		PlaySoundA("eiffel_blue.wav", NULL, SND_FILENAME | SND_ASYNC | SND_LOOP);
 		LoadPictures(pSelf);
 		InitializeKeyStruct(pSelf);
 		hThreadReceive = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)StartReceiveData, NULL, 0, 0);
-		hThreadCheckState = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)ProcessData, pSelf, 0, 0);
+		hThreadCheckState = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)GameWindow_ProcessData, pSelf, 0, 0);
 		break;
 	case WM_DESTROY:
 		PlaySoundA(NULL, 0, 0);

@@ -1,2 +1,6 @@
 ﻿  EntryPoint.cpp
+  GameWindow.cpp
+d:\_BSUIR\.git\usb\usb-hid\usb-hid\GameWindow.cpp(155,12): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
+d:\_BSUIR\.git\usb\usb-hid\usb-hid\GameWindow.cpp(165,13): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
+  Generating Code...
   usb-hid.vcxproj -> D:\_BSUIR\.git\usb\usb-hid\Debug\usb-hid.exe

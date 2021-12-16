@@ -1,4 +1,3 @@
-#include "GameWindow.h"
 #include "EntryPoint.h"
 
 void InitializeBackBuffer(HWND hWnd, int width, int height)
@@ -62,7 +61,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case WM_COMMAND:
 		if (lParam == (LPARAM)btnStart)
 		{
-			hWndGame = CreateWindowEx(0, (LPCWSTR)atomGame, L"Game", WS_DISABLED | WS_OVERLAPPEDWINDOW, 100, 50, 1100, 750, 0, 0, hInst, NULL);
+			hWndGame = CreateWindowEx(0, (LPCWSTR)atomGame, L"Game", WS_DISABLED | WS_OVERLAPPEDWINDOW, 100, 50, 1200, 750, 0, 0, hInst, NULL);
 			EnableWindow(hWndGame, TRUE);
 			ShowWindow(hWndGame, SW_NORMAL);
 		}
