@@ -1,26 +1,5 @@
-#include <Windows.h>
 #include "GameWindow.h"
-
-#define ARROW_WIDTH 96
-#define ARROW_HEIGHT 96
-
-HWND hWndGame;
-
-HWND btnStart;
-//HWND hWndGame;
-//HWND hWndMain;
-
-HINSTANCE hInst;
-ATOM atomGame;
-
-HDC hdcBack;
-HBITMAP hbmBack;
-RECT clientRect;
-RECT rcGame;
-
-//HDC hArrowUp;
-
-LRESULT CALLBACK WndGameProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+#include "EntryPoint.h"
 
 void InitializeBackBuffer(HWND hWnd, int width, int height)
 {
@@ -55,12 +34,6 @@ HDC LoadBitmapDC(HWND hWnd, const wchar_t* fileName)
 	return resultDC;
 }
 
-//void Draw()
-//{
-//	FillRect(hdcBack, &clientRect, (HBRUSH)(CreateSolidBrush(RGB(40, 187, 253))));
-//	GdiTransparentBlt(hdcBack, 10, 10, ARROW_WIDTH, ARROW_HEIGHT, hArrowUp, 0, 0, ARROW_WIDTH, ARROW_HEIGHT, RGB(34, 177, 76));
-//}
-
 LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	PAINTSTRUCT ps;
@@ -69,7 +42,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	switch (uMsg)
 	{
 	case WM_CREATE:
-		//hArrowUp = LoadBitmapDC(hWnd, L"arrow_up.bmp");
 		break;
 	case WM_DESTROY:
 		FinalizeBackBuffer();
@@ -84,7 +56,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case WM_COMMAND:
 		if (lParam == (LPARAM)btnStart)
 		{
-			//atomGame = GameWindow_RegisterClass(hInst);
 			hWndGame = CreateWindowEx(0, (LPCWSTR)atomGame, L"Game", WS_DISABLED | WS_OVERLAPPEDWINDOW, 50, 50, 1100, 750, 0, 0, hInst, NULL);
 			EnableWindow(hWndGame, TRUE);
 			ShowWindow(hWndGame, SW_NORMAL);
@@ -105,7 +76,6 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR lpCmdLine,
 	WNDCLASSEX wcex;
 	HWND hWnd;
 	MSG msg;
-	//ATOM atomGame;
 	
 	wcex.cbSize = sizeof(WNDCLASSEX);
 	wcex.style = 0;
@@ -126,8 +96,6 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR lpCmdLine,
 
 	hWnd = CreateWindowEx(0, L"WindowClass", L"MyWindow", (WS_OVERLAPPEDWINDOW | WS_VISIBLE), 200, 100, 1000, 600, 0, 0, hInstance, NULL);
 	btnStart = CreateWindowEx(0, L"BUTTON", L"START", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 400, 215, 200, 70, hWnd, NULL, hInstance, NULL);
-
-	//hWndGame = CreateWindowEx(0, (LPCWSTR)atomGame, L"Game", WS_DISABLED | WS_OVERLAPPEDWINDOW, 100, 100, 1000, 700, 0, 0, hInstance, NULL);
 
 	ShowWindow(hWnd, nCmdShow);
 	UpdateWindow(hWnd);

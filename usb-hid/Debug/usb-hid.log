@@ -1,3 +1,3 @@
 ﻿  GameWindow.cpp
-d:\_BSUIR\.git\usb\usb-hid\usb-hid\GameWindow.cpp(266,77): warning C4552: '-': result of expression not used
+d:\_BSUIR\.git\usb\usb-hid\usb-hid\GameWindow.cpp(217,77): warning C4552: '-': result of expression not used
   usb-hid.vcxproj -> D:\_BSUIR\.git\usb\usb-hid\Debug\usb-hid.exe

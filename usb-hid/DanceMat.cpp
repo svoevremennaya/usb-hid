@@ -1,182 +1,52 @@
-#include <stdio.h>
-#include <iostream>
-#include <chrono>
-
-#include <iostream>
-#include <iomanip>
-#include <sstream>
-
-#pragma comment (lib, "hid.lib")
-#pragma comment (lib, "setupapi.lib")
-
 #include "DanceMat.h"
 
-Key arrowLeft, arrowRight, arrowDown, arrowUp, circle, triangle, square, cross, selectKey, startKey, empty, centre;
+//						  AL      AD     AU     AR      T     SQ     CR    CIR     ST     SE    CEN
+BOOL pressedKeys[11] = { FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE };		// shows pressed keys
 
-//						AL        AD     AU     AR      T     SQ     CR    CIR     ST     SE    CEN
-BOOL pressedKeys[11] = { FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE };
+BOOL isRunning;												// shows whether device connected
+BYTE* inReport;												// buffer for the input report
+int	inReportSize;											// size of buffer for the input report
 
-std::string pressedKeyStr = "q";
-//int pressedKey = -1;
-Key pressedKey;
-int pressedPrev = -1;
+OVERLAPPED devReadOverlapped;								// structure for async input
+BOOL devReadPending;										// flag for expecting data
 
-std::string strPrev = "w";
+int devCount;												// number of found hid-devices
+int devSelected;											// chosen device
+PSP_DEVICE_INTERFACE_DETAIL_DATA devDetailData[DEV_NUM];	// paths to device interfaces
+int devDetailDataSize[DEV_NUM];								// length of paths
+int devInputReportSize[DEV_NUM];							// sizes of input reports
+HANDLE hDevice;												// handle of opened device
+HANDLE hSelected;											// handle of selected device
 
-BOOL isRunning;
-BYTE* inReport;
-int	inReportSize;
 
-OVERLAPPED devReadOverlapped;
-BOOL devReadPending;
-
-int devCount; // number of hid-devices
-int devSelected; // chosen device
-PSP_DEVICE_INTERFACE_DETAIL_DATA devDetailData[DEV_NUM]; // the path for a device interface
-int devDetailDataSize[DEV_NUM];
-int devInputReportSize[DEV_NUM];
-HANDLE hDevice;
-HANDLE hSelected;
-
-// HID Initialization
+// HID Initialization. Reset the selected device and paths to device interfaces
 void HID_Init()
 {
 	int  i;
 
-	devCount = 0;																// обнуляем количество найденных устройств
-	devSelected = -1;															// сбрасываем выбранное устройство
-	for (i = 0; i < DEV_NUM; i++)												// перебираем весь массив с указателями на структуры, хранящие пути к устройствам
+	devCount = 0;																
+	devSelected = -1;															
+	for (i = 0; i < DEV_NUM; i++)												
 	{
-		devDetailData[i] = NULL;												// обнуляем очередной указатель на структуру, хранящую путь к устройству
+		devDetailData[i] = NULL;											
 	}
 }
 
-// HID UnInitialization
+// HID UnInitialization. Free memory with device paths
 void HID_UnInit()
 {
 	int  i;
 
-	for (i = 0; i < DEV_NUM; i++)												// перебираем весь массив с указателями на структуры, хранящие пути к устройствам
+	for (i = 0; i < DEV_NUM; i++)												
 	{
 		if (devDetailData[i])
 		{
-			free(devDetailData[i]);												// очищаем память структуры, хранящей путь к устройству
+			free(devDetailData[i]);												
 		}
 	}
 }
 
-// Find Devices
-int FindDevices()
-{
-	GUID hidGuid;
-	HANDLE hDevice;
-	HDEVINFO devInfo;
-	SP_DEVICE_INTERFACE_DATA devData;
-	PSP_DEVICE_INTERFACE_DETAIL_DATA devDetail;
-	PSP_DEVICE_INTERFACE_DETAIL_DATA devDetailSelected;
-	PHIDP_PREPARSED_DATA preparsedData;
-	HIDD_ATTRIBUTES attributes;
-	HIDP_CAPS capabilities;
-	ULONG length;
-	int ind;
-	int size;
-	BOOL ok;
-
-	HidD_GetHidGuid(&hidGuid);
-	devInfo = SetupDiGetClassDevs(&hidGuid, NULL, NULL, DIGCF_PRESENT | DIGCF_DEVICEINTERFACE);
-	devData.cbSize = sizeof(devData);
-
-	devDetail = NULL;
-	if (devSelected != -1)
-	{
-		devDetailSelected = (PSP_DEVICE_INTERFACE_DETAIL_DATA)malloc(devDetailDataSize[devSelected]);
-		memcpy(devDetailSelected, devDetailData[devSelected], devDetailDataSize[devSelected]);
-	}
-	else
-	{
-		devDetailSelected = NULL;
-	}
-
-	// сбрасываем все указатели на детальные данные в списке
-	for (ind = 0; ind < DEV_NUM; ind++)
-	{
-		if (devDetailData[ind])
-		{
-			free(devDetailData[ind]);
-			devDetailData[ind] = NULL;
-		}
-	}
-
-	/* Scan all Devices */
-
-	ind = -1;
-	devCount = 0;
-	hDevice = INVALID_HANDLE_VALUE;
-
-	do
-	{
-		ind++;
-		if (hDevice != INVALID_HANDLE_VALUE)
-		{
-			CloseHandle(hDevice);
-		}
-
-		ok = SetupDiEnumDeviceInterfaces(devInfo, 0, &hidGuid, ind, &devData);
-		if (!ok)
-		{
-			break;
-		}
-
-		
-		ok = SetupDiGetDeviceInterfaceDetail(devInfo, &devData, NULL, 0, &length, NULL);
-		// allocation memory for buffer with detail data
-		if (devDetail)
-		{
-			free(devDetail);
-		}
-		devDetail = (PSP_DEVICE_INTERFACE_DETAIL_DATA)malloc(length);
-		size = length;
-		devDetail->cbSize = sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA);
-
-		// getting path to device
-		ok = SetupDiGetDeviceInterfaceDetail(devInfo, &devData, devDetail, length, NULL, NULL);
-		if (!ok)
-		{
-			continue;
-		}
-
-		// checking the availability of the device
-		hDevice = CreateFile(devDetail->DevicePath, 0, FILE_SHARE_READ | FILE_SHARE_WRITE, (LPSECURITY_ATTRIBUTES)NULL, OPEN_EXISTING, 0, NULL);
-		if (hDevice == INVALID_HANDLE_VALUE)
-		{
-			continue;
-		}
-
-		attributes.Size = sizeof(attributes);
-		ok = HidD_GetAttributes(hDevice, &attributes);
-		if (!ok) { continue; }
-
-		devCount++;
-		devDetail = NULL;
-		CloseHandle(hDevice);
-		hDevice = INVALID_HANDLE_VALUE;
-
-	} while (devCount < DEV_NUM);
-
-	if (devDetail)
-	{
-		free(devDetail);
-	}
-
-	if (devDetailSelected)
-	{
-		free(devDetailSelected);
-	}
-
-	SetupDiDestroyDeviceInfoList(devInfo);
-	return devCount;
-}
-
+// Open hid-device (num is index in the list of found devices)
 BOOL Hid_Open(int num)
 {
 	ULONG numBuffers;
@@ -186,16 +56,18 @@ BOOL Hid_Open(int num)
 	hDevice = CreateFile(devDetailData[num]->DevicePath, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, (LPSECURITY_ATTRIBUTES)NULL, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, NULL);
 	if (hDevice == INVALID_HANDLE_VALUE) { return FALSE; }
 	devSelected = num;
+	memset(&devReadOverlapped, 0, sizeof(OVERLAPPED));
 
 	return TRUE;
 }
 
+// Close hid-device. Reset selected device and cancel all async operations for device
 void Hid_Close()
 {
 	devSelected = -1;
 	CancelIo(hDevice);
 	devReadPending = FALSE;
-
+	
 	if (hDevice != INVALID_HANDLE_VALUE)
 	{
 		CloseHandle(hDevice);
@@ -203,6 +75,7 @@ void Hid_Close()
 	}
 }
 
+// Reading data from hid-device
 BOOL Hid_Read(BYTE* buffer, DWORD size, DWORD* bytesRead)
 {
 	int lastError;
@@ -236,21 +109,24 @@ BOOL Hid_Read(BYTE* buffer, DWORD size, DWORD* bytesRead)
 
 int FindDevice()
 {
-	GUID hidGuid;
-	HANDLE hDevice;
-	HDEVINFO devInfo;
-	SP_DEVICE_INTERFACE_DATA devData;
-	PSP_DEVICE_INTERFACE_DETAIL_DATA devDetail;
-	PSP_DEVICE_INTERFACE_DETAIL_DATA devDetailSelected;
-	PHIDP_PREPARSED_DATA preparsedData;
-	HIDD_ATTRIBUTES attributes;
-	HIDP_CAPS capabilities;
-	ULONG length;
-	int ind;
-	int size;
-	BOOL ok;
+	GUID hidGuid;											// id of class hid-devices
+	HANDLE hDevice;											// handle for opened device
+	HDEVINFO devInfo;										// list of received hid-devices
+	SP_DEVICE_INTERFACE_DATA devData;						// data about hid-device interface
+	PSP_DEVICE_INTERFACE_DETAIL_DATA devDetail;				// path to device
+	PSP_DEVICE_INTERFACE_DETAIL_DATA devDetailSelected;		// path to selected device
+	PHIDP_PREPARSED_DATA preparsedData;						// data for processing reports
+	HIDD_ATTRIBUTES attributes;								// device attributes
+	HIDP_CAPS capabilities;									// capabilities from report descriptor
+	ULONG length;											// size of buffer for receiving detail data about device interface
+	int ind;												// index of interface
+	int size;												// path length
+	BOOL ok;												// flag
 
+	// Receiving GUID of class USB HID devices
 	HidD_GetHidGuid(&hidGuid);
+
+	// Receiving list of all registered in system hid-devices
 	devInfo = SetupDiGetClassDevs(&hidGuid, NULL, NULL, DIGCF_PRESENT | DIGCF_DEVICEINTERFACE);
 	devData.cbSize = sizeof(devData);
 
@@ -265,7 +141,7 @@ int FindDevice()
 		devDetailSelected = NULL;
 	}
 
-	// сбрасываем все указатели на детальные данные в списке
+	// Reset device paths
 	for (ind = 0; ind < DEV_NUM; ind++)
 	{
 		if (devDetailData[ind])
@@ -275,8 +151,6 @@ int FindDevice()
 		}
 	}
 
-	/* Scan all Devices */
-
 	ind = -1;
 	devCount = 0;
 	hDevice = INVALID_HANDLE_VALUE;
@@ -284,20 +158,14 @@ int FindDevice()
 	do
 	{
 		ind++;
-		if (hDevice != INVALID_HANDLE_VALUE)
-		{
-			CloseHandle(hDevice);
-		}
+		if (hDevice != INVALID_HANDLE_VALUE) { CloseHandle(hDevice); }
 
+		// Get information about hid-device
 		ok = SetupDiEnumDeviceInterfaces(devInfo, 0, &hidGuid, ind, &devData);
-		if (!ok)
-		{
-			break;
-		}
+		if (!ok) { break; }
 
-
+		// Get the length of buffer for device path and allocate memory for this buffer
 		ok = SetupDiGetDeviceInterfaceDetail(devInfo, &devData, NULL, 0, &length, NULL);
-		// allocation memory for buffer with detail data
 		if (devDetail)
 		{
 			free(devDetail);
@@ -306,36 +174,34 @@ int FindDevice()
 		size = length;
 		devDetail->cbSize = sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA);
 
-		// getting path to device
+		// Get path to device
 		ok = SetupDiGetDeviceInterfaceDetail(devInfo, &devData, devDetail, length, NULL, NULL);
-		if (!ok)
-		{
-			continue;
-		}
+		if (!ok) { continue; } 
 
-		// checking the availability of the device
+		// Check the availability of the device
 		hDevice = CreateFile(devDetail->DevicePath, 0, FILE_SHARE_READ | FILE_SHARE_WRITE, (LPSECURITY_ATTRIBUTES)NULL, OPEN_EXISTING, 0, NULL);
-		if (hDevice == INVALID_HANDLE_VALUE)
-		{
-			continue;
-		}
+		if (hDevice == INVALID_HANDLE_VALUE) { continue; }
 
+		// Get device attributes
 		attributes.Size = sizeof(attributes);
 		ok = HidD_GetAttributes(hDevice, &attributes);
 		if (!ok) { continue; }
 
+		// Check VID and PID
 		if (attributes.VendorID == VID && attributes.ProductID == PID)
 		{
 			hSelected = hDevice;
 			devSelected = devCount;
-			printf("found");
 		}
 
-		ok = HidD_GetPreparsedData(hDevice, &preparsedData);					// запрашиваем блок данных для обработки репортов
-		if (!ok)	continue;
+		// Get information for processing reports
+		ok = HidD_GetPreparsedData(hDevice, &preparsedData);					
+		if (!ok) { continue; }
 
-		ok = HidP_GetCaps(preparsedData, &capabilities);   						// получаем возможности из дескриптора репорта
-		if (!ok) continue;
+		ok = HidP_GetCaps(preparsedData, &capabilities);   						
+		if (!ok) { continue; }
+
+		HidD_FreePreparsedData(preparsedData);
 
 		devDetailData[devCount] = devDetail;
 		devDetailDataSize[devCount] = size;
@@ -356,113 +222,31 @@ int FindDevice()
 	return devCount;
 }
 
+// Connect to hid-device
 void Connect()
 {
 	if (Hid_Open(devSelected))
 	{
 		inReportSize = devInputReportSize[devSelected];
-		if (inReport) { free(inReport); }
+		if (inReport)
+		{ 
+			free(inReport); 
+		}
 		inReport = (BYTE*)calloc(inReportSize, 1);
 		isRunning = true;
 	}
 	else
 	{
-		std::cout << "Cannot open device\n";
+		MessageBox(HWND_DESKTOP, L"Cannot open device", L"Error", MB_OK);
 	}
 }
 
-std::string IntToHex(const int i) {
-	std::ostringstream ost;
-	ost << std::hex << i;
-	return ost.str();
-}
-
-int Output(std::string &str)
+void Input()
 {
-	if (str == SQUARE_STR || str == SQUARE_STR_CEN)
-	{
-		std::cout << "|_|" << std::endl;
-		pressedKeyStr = SQUARE_STR;
-		pressedKey = square;
-	}
-	else if (str == ARROW_DOWN_STR || str == ARROW_DOWN_STR_CEN)
-	{
-		std::cout << "\\/" << std::endl;
-		pressedKeyStr = ARROW_DOWN_STR;
-		pressedKey = arrowDown;
-	}
-	else if (str == TRIANGLE_STR || str == TRIANGLE_STR_CEN)
-	{
-		std::cout << "/_\\" << std::endl;
-		pressedKeyStr = TRIANGLE_STR;
-		pressedKey = triangle;
-	}
-	else if (str == ARROW_LEFT_STR || str == ARROW_LEFT_STR_CEN)
-	{
-		std::cout << "<-" << std::endl;
-		pressedKeyStr = ARROW_LEFT_STR;
-		pressedKey = arrowLeft;
-	}
-	else if (str == CROSS_STR || str == CROSS_STR_CEN)
-	{
-		std::cout << "cross" << std::endl;
-		pressedKeyStr = CROSS_STR;
-		pressedKey = cross;
-	}
-	else if (str == ARROW_UP_STR || str == ARROW_UP_STR_CEN)
-	{
-		std::cout << "/\\" << std::endl;
-		pressedKeyStr = ARROW_UP_STR;
-		pressedKey = arrowUp;
-	}
-	else if (str == CIRCLE_STR || str == CIRCLE_STR_CEN)
-	{
-		std::cout << "circle" << std::endl;
-		pressedKeyStr = CIRCLE_STR;
-		pressedKey = circle;
-	}
-	else if (str == ARROW_RIGHT_STR || str == ARROW_RIGHT_STR_CEN)
-	{
-		std::cout << "->" << std::endl;
-		pressedKeyStr = ARROW_RIGHT_STR;
-		pressedKey = arrowRight;
-	}
-	else if (str == SELECT_STR || str == SELECT_STR_CEN)
-	{
-		std::cout << "select" << std::endl;
-		pressedKeyStr = SELECT_STR;
-		pressedKey = selectKey;
-	}
-	else if (str == START_STR || str == START_STR_CEN)
-	{
-		std::cout << "start" << std::endl;
-		pressedKeyStr = START_STR;
-		pressedKey = startKey;
-	}
-	else if (str == EMPTY_STR)
-	{
-		std::cout << "empty" << std::endl;
-		pressedKeyStr = EMPTY_STR;
-		pressedKey = empty;
-	}
-	else if (str == CENTRE_STR)
-	{
-		std::cout << "centre" << std::endl;
-		pressedKeyStr = CENTRE_STR;
-		pressedKey = centre;
-	}
-	return pressedKey.keyId;
-}
-
-std::string OnInput()
-{
-	std::string str;
-
-	str = "";
+	BYTE byte;
 	for (int i = 0; i < inReportSize; i++)
 	{
-		str = str + " " + IntToHex(inReport[i]);
-		BYTE byte = inReport[i];
+		byte = inReport[i];
 		if (i == 5)
 		{
 			if (byte == 0x0f)
@@ -517,26 +301,17 @@ std::string OnInput()
 			if ((byte & 0b00110000) == 0x30) { pressedKeys[8] = TRUE; pressedKeys[9] = TRUE; }
 		}
 	}
-	
-	if (str != strPrev)
-	{
-		pressedPrev = pressedKey.keyId;
-		strPrev = pressedKeyStr;
-		Output(str);
-	}
-	pressedPrev = pressedKey.keyId;
-	strPrev = pressedKeyStr;
-	return str;
+
+	return;
 }
 
-void OnError()
+void Error()
 {
 	isRunning = false;
 	Hid_Close();
-	std::cout << "Device closed\n" << std::endl;
 }
 
-void GetDataByTimer()
+void GetData()
 {
 	DWORD bytesRead;
 	if (isRunning)
@@ -545,59 +320,24 @@ void GetDataByTimer()
 		{
 			if (bytesRead)
 			{
-				OnInput();
+				Input();
 			}
 		}
 		else
 		{
-			OnError();
+			Error();
 		}
-	}
-	else
-	{
-		std::cout << "\nThere are no connected devices" << std::endl;
 	}
 }
 
 void StartReceiveData()
 {
-	strPrev = "";
-	pressedKey.keyId = -1;
-	pressedKeyStr = "qwerty";
 	HID_Init();
 	FindDevice();
 	Connect();
 
 	while (1)
 	{
-		GetDataByTimer();
+		GetData();
 	}
 }
-
-//int main()
-//{
-//	strPrev = "";
-//	HID_Init();
-//	int num = FindDevices();
-//	printf("%d", num);
-//	FindDevice();
-//	Connect();
-//	//GetInputReport();
-//	//GetDataByTimer();
-//
-//	std::chrono::steady_clock::time_point tend = std::chrono::steady_clock::now() + std::chrono::seconds(10);
-//	while (std::chrono::steady_clock::now() < tend)
-//	{
-//		GetDataByTimer();
-//	}
-//
-//	/*int i = 0;
-//	while (i < 20)
-//	{
-//		Sleep(250);
-//		GetDataByTimer();
-//		i++;
-//	}*/
-//
-//	return 1;
-//}
