@@ -10,6 +10,7 @@ HWND btnStart;
 HINSTANCE hInst;
 ATOM atomGame;
 
-HDC hdcBack;
-HBITMAP hbmBack;
+HDC hdcBack, hBackBmp;
+HBITMAP hbmBack, hbmButton;
+HDC hButton;
 RECT clientRect;

@@ -1,6 +1,9 @@
 #include <Windows.h>
 #include <iostream>
+#include <time.h>
 #include "DanceMat.h"
+
+#pragma comment (lib, "winmm.lib")
 
 #define ARROW_WIDTH 96
 #define ARROW_HEIGHT 96
@@ -18,6 +21,8 @@ BOOL keysToPress[NUMBERS_KEY_TO_PRESS][8] =
 	{ FALSE, FALSE, FALSE, FALSE, TRUE, FALSE, FALSE, FALSE },
 	{ FALSE, TRUE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE }
 };
+
+BOOL ranKeysToPress[8];
 
 HANDLE hThreadReceive, hThreadCheckState;
 
@@ -100,7 +105,7 @@ void LoadPictures(PGameWindow pSelf)
 	hArrowRightGreen = GameWindow_LoadBitmapDC(pSelf->hWndSelf, L"green\\arrow_right_green.bmp");
 	hArrowDownGreen = GameWindow_LoadBitmapDC(pSelf->hWndSelf, L"green\\arrow_down_green.bmp");
 	hArrowLeftGreen = GameWindow_LoadBitmapDC(pSelf->hWndSelf, L"green\\arrow_left_green.bmp");
-	hSquareGreen = GameWindow_LoadBitmapDC(pSelf->hWndSelf, L"green\\square.bmp_green");
+	hSquareGreen = GameWindow_LoadBitmapDC(pSelf->hWndSelf, L"green\\square_green.bmp");
 	hTriangleGreen = GameWindow_LoadBitmapDC(pSelf->hWndSelf, L"green\\triangle_green.bmp");
 	hCircleGreen = GameWindow_LoadBitmapDC(pSelf->hWndSelf, L"green\\circle_green.bmp");
 	hCrossGreen = GameWindow_LoadBitmapDC(pSelf->hWndSelf, L"green\\cross_green.bmp");
@@ -142,7 +147,7 @@ void GameWindow_Draw(PGameWindow pSelf)
 
 	for (int i = 0; i < 8; i++)
 	{
-		if (keysToPress[iteration][i])
+		if (ranKeysToPress[i])
 		{
 			GdiTransparentBlt(pSelf->hdcBack, coordKeysToPress[0][i], coordKeysToPress[1][i], ARROW_WIDTH, ARROW_HEIGHT, pictures[i], 0, 0, ARROW_WIDTH, ARROW_HEIGHT, RGB(34, 177, 76));
 		}
@@ -229,6 +234,80 @@ void GameWindow_CompareResults(PGameWindow pSelf)
 	}
 }
 
+void GenerateKeysToPress()
+{
+	int numKeysToPress, indKeyToPress;
+
+	srand(time(NULL));
+	numKeysToPress = 1 + rand() % 3;
+
+	for (int i = 0; i < 8; i++)
+	{
+		ranKeysToPress[i] = FALSE;
+	}
+
+	for (int i = 0; i < numKeysToPress; i++)
+	{
+		srand(time(NULL));
+		indKeyToPress = rand() % 8;
+		ranKeysToPress[indKeyToPress] = TRUE;
+	}
+}
+
+void ProcessData(PGameWindow pSelf)
+{
+	while (1)
+	{
+		GenerateKeysToPress();
+		//InvalidateRect(pSelf->hWndSelf, NULL, TRUE);
+		BOOL done = FALSE;
+		do
+		{
+			if (pressedKeys[0] == TRUE && ranKeysToPress[0] == TRUE) { pSelf->hArrowLeft = hArrowLeftGreen; done = TRUE; }
+			if (pressedKeys[1] == TRUE && ranKeysToPress[1] == TRUE) { pSelf->hArrowDown = hArrowDownGreen; done = TRUE; }
+			if (pressedKeys[2] == TRUE && ranKeysToPress[2] == TRUE) { pSelf->hArrowUp = hArrowUpGreen; done = TRUE; }
+			if (pressedKeys[3] == TRUE && ranKeysToPress[3] == TRUE) { pSelf->hArrowRight = hArrowRightGreen; done = TRUE; }
+			if (pressedKeys[4] == TRUE && ranKeysToPress[4] == TRUE) { pSelf->hTriangle = hTriangleGreen; done = TRUE; }
+			if (pressedKeys[5] == TRUE && ranKeysToPress[5] == TRUE) { pSelf->hSquare = hSquareGreen; done = TRUE; }
+			if (pressedKeys[6] == TRUE && ranKeysToPress[6] == TRUE) { pSelf->hCross = hCrossGreen; done = TRUE; }
+			if (pressedKeys[7] == TRUE && ranKeysToPress[7] == TRUE) { pSelf->hCircle = hCircleGreen; done = TRUE; }
+
+			if (pressedKeys[0] == FALSE && ranKeysToPress[0] == FALSE) { pSelf->hArrowLeft = hArrowLeft; }
+			if (pressedKeys[1] == FALSE && ranKeysToPress[1] == FALSE) { pSelf->hArrowDown = hArrowDown; }
+			if (pressedKeys[2] == FALSE && ranKeysToPress[2] == FALSE) { pSelf->hArrowUp = hArrowUp; }
+			if (pressedKeys[3] == FALSE && ranKeysToPress[3] == FALSE) { pSelf->hArrowRight = hArrowRight; }
+			if (pressedKeys[4] == FALSE && ranKeysToPress[4] == FALSE) { pSelf->hTriangle = hTriangle; }
+			if (pressedKeys[4] == FALSE && ranKeysToPress[4] == FALSE) { pSelf->hTriangle = hTriangle; }
+			if (pressedKeys[5] == FALSE && ranKeysToPress[5] == FALSE) { pSelf->hSquare = hSquare; }
+			if (pressedKeys[6] == FALSE && ranKeysToPress[6] == FALSE) { pSelf->hCross = hCross; }
+			if (pressedKeys[7] == FALSE && ranKeysToPress[7] == FALSE) { pSelf->hCircle = hCircle; }
+
+			if ((pressedKeys[0] == TRUE && ranKeysToPress[0] == FALSE)) { pSelf->hArrowLeft = hArrowLeftRed; done = FALSE; }
+			if ((pressedKeys[1] == TRUE && ranKeysToPress[1] == FALSE)) { pSelf->hArrowDown = hArrowDownRed; done = FALSE; }
+			if ((pressedKeys[2] == TRUE && ranKeysToPress[2] == FALSE)) { pSelf->hArrowUp = hArrowUpRed; done = FALSE; }
+			if ((pressedKeys[3] == TRUE && ranKeysToPress[3] == FALSE)) { pSelf->hArrowRight = hArrowRightRed; done = FALSE; }
+			if ((pressedKeys[4] == TRUE && ranKeysToPress[4] == FALSE)) { pSelf->hTriangle = hTriangleRed; done = FALSE; }
+			if ((pressedKeys[5] == TRUE && ranKeysToPress[5] == FALSE)) { pSelf->hSquare = hSquareRed; done = FALSE; }
+			if ((pressedKeys[6] == TRUE && ranKeysToPress[6] == FALSE)) { pSelf->hCross = hCrossRed; done = FALSE; }
+			if ((pressedKeys[7] == TRUE && ranKeysToPress[7] == FALSE)) { pSelf->hCircle = hCircleRed; done = FALSE; }
+
+			for (int j = 0; j < 8; j++)
+			{
+				if (pressedKeys[j] == FALSE && ranKeysToPress[j] == TRUE)
+				{
+					done = FALSE;
+				}
+			}
+			//Sleep(100);
+			InvalidateRect(pSelf->hWndSelf, NULL, TRUE);
+			Sleep(200);
+		} while (!done);
+
+	}
+
+	return;
+}
+
 LRESULT CALLBACK GameWindow_WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	PGameWindow pSelf;
@@ -252,12 +331,14 @@ LRESULT CALLBACK GameWindow_WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM 
 	switch (uMsg)
 	{
 	case WM_CREATE:
+		PlaySoundA("eiffel_blue.wav", NULL, SND_FILENAME | SND_ASYNC);
 		LoadPictures(pSelf);
 		InitializeKeyStruct(pSelf);
 		hThreadReceive = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)StartReceiveData, NULL, 0, 0);
-		hThreadCheckState = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)GameWindow_CompareResults, pSelf, 0, 0);
+		hThreadCheckState = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)ProcessData, pSelf, 0, 0);
 		break;
 	case WM_DESTROY:
+		PlaySoundA(NULL, 0, 0);
 		GameWindow_FinalizeBackBuffer(pSelf);
 		CloseHandle(hThreadReceive);
 		CloseHandle(hThreadCheckState);
