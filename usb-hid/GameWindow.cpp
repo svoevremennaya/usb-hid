@@ -11,6 +11,8 @@ int coordKeysToPress[2][8] = {
 	{ 106, 202, 10, 106, 202, 202, 10, 10 }
 };
 
+int score;
+
 HDC hBack;
 HDC hArrowUp, hArrowLeft, hArrowDown, hArrowRight, hSquare, hTriangle, hCircle, hCross;
 HDC hArrowUpGreen, hArrowLeftGreen, hArrowDownGreen, hArrowRightGreen, hSquareGreen, hTriangleGreen, hCircleGreen, hCrossGreen;
@@ -170,6 +172,7 @@ void GameWindow_GenerateKeysToPress()
 
 void GameWindow_ProcessData(PGameWindow pSelf)
 {
+	score = 0;
 	while (1)
 	{
 		GameWindow_GenerateKeysToPress();
@@ -214,9 +217,8 @@ void GameWindow_ProcessData(PGameWindow pSelf)
 			InvalidateRect(pSelf->hWndSelf, NULL, TRUE);
 			Sleep(200);
 		} while (!done);
-
+		score++;
 	}
-
 	return;
 }
 
@@ -226,6 +228,7 @@ LRESULT CALLBACK GameWindow_WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM 
 
 	PAINTSTRUCT ps;
 	HDC hdc;
+	std::wstring str;
 
 	if (WM_CREATE == uMsg)
 	{
@@ -251,6 +254,8 @@ LRESULT CALLBACK GameWindow_WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM 
 		break;
 	case WM_DESTROY:
 		PlaySoundA(NULL, 0, 0);
+		str = L"Your score is " + std::to_wstring(score);
+		MessageBox(HWND_DESKTOP, str.c_str(), L"Congratulations", MB_OK);
 		GameWindow_FinalizeBackBuffer(pSelf);
 		CloseHandle(hThreadReceive);
 		CloseHandle(hThreadCheckState);

@@ -1,6 +1,9 @@
 #include <Windows.h>
 #include <iostream>
 #include <time.h>
+#include <chrono>
+#include <iomanip>
+#include <sstream>
 #include "DanceMat.h"
 
 #pragma comment (lib, "winmm.lib")

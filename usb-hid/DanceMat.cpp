@@ -52,6 +52,7 @@ BOOL Hid_Open(int num)
 	ULONG numBuffers;
 
 	if (devDetailData[num] == NULL) { return FALSE; }
+	if (devSelected == -1) { return FALSE;  }
 
 	hDevice = CreateFile(devDetailData[num]->DevicePath, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, (LPSECURITY_ATTRIBUTES)NULL, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, NULL);
 	if (hDevice == INVALID_HANDLE_VALUE) { return FALSE; }
